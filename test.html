@@ -26,13 +26,9 @@ if (isPopup) {
   window.resizeTo(584,480);
   setTimeout(()=>cookie.onclick = () => window.moveTo(100, 100), 750);
 } else {
+  var popup = window.open(`test.html`,"","popup");
   btn.onclick = (e) => {
-    var popup = window.open(`test.html`,"","popup");
-	  btn.remove();
-    game.style.display = "block";
-    cookie.onclick = () => popup.moveTo(0, 0);
+    popup.moveBy(100, 100);
   };
-  navigator.mediaDevices.enumerateDevices()
-    .then(e=>e.filter(e=>e.kind==="audioinput"&&e.label).length && (document.body.innerText = "OK!"));
 }
 </script>
