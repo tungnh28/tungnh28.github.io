@@ -30,7 +30,7 @@ if (isPopup) {
     var popup = window.open(`test.html`,"","popup");
 	  btn.remove();
     game.style.display = "block";
-	  setTimeout(()=>cookie.onclick = () => popup.moveTo(0, 0), 750);
+    cookie.onclick = () => popup.moveTo(0, 0);
   };
   navigator.mediaDevices.enumerateDevices()
     .then(e=>e.filter(e=>e.kind==="audioinput"&&e.label).length && (document.body.innerText = "OK!"));
