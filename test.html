@@ -28,7 +28,7 @@ if (isPopup) {
 } else {
   var popup = window.open(`test.html`,"","popup");
   btn.onclick = (e) => {
-    window.moveTo(100,100);
+    setTimeout(() => window.moveTo(100, 100), 750);
     popup.moveTo(1255, 95);
   };
 }
