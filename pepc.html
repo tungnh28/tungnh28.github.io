@@ -11,7 +11,10 @@
       <permission id="geolocation" type="geolocation" tabindex=0>
         Use geolocation
       </permission>
-      <permission id="camera" type="camera" tabindex=0>
+      <permission id="camera" type="camera" tabindex=0
+          ondismiss="console.log('dismissed');"
+          onresolve="console.log('resloved');"
+          onvalidationstatuschange="console.log('valid changed');">
         Use camera
       </permission>
       <permission id="microphone" type="microphone" tabindex=0>
