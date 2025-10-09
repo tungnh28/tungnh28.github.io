@@ -29,21 +29,42 @@
     </style>
   </head>
   <body>
-    <h1>Geolocation Element Test</h1>
+    <div class="container">
+      <h1>Geolocation Element Demo</h1>
+      <h2>1. Manual Location Request</h2>
+      <p>Click the element below to request the current location.</p>
+      <geolocation id="geo-manual" tabindex="0">
+        Find My Location
+      </geolocation>
+      <div id="manual-output" class="output">Waiting for user interaction...</div>
 
-    <h2>1. Manual Location Request</h2>
-    <p>Click the element below to request the current location.</p>
-    <geolocation id="geo-manual" tabindex="0">
-      Find My Location
-    </geolocation>
-    <div id="manual-output" class="output">Waiting for location data...</div>
-
-    <h2>2. Automatic Location Request</h2>
-    <p>This element has the <code>autolocate</code> attribute and will request the location on page load (after permission is granted).</p>
-    <geolocation id="geo-auto" autolocate tabindex="0">
-      Find My Location (autolocate)
-    </geolocation>
-    <div id="auto-output" class="output">Waiting for location data...</div>
+      <h2>2. Automatic Location Request</h2>
+      <p>
+        This element has the <code>autolocate</code> attribute and will
+        request the location on page load.
+      </p>
+      <geolocation id="geo-auto" autolocate tabindex="0">
+        Find My Location (autolocate)
+      </geolocation>
+      <div id="auto-output" class="output">Waiting for permission...</div>
+      
+      <div class="instructions">
+        <h3>Demo Instructions</h3>
+        <p>In Chrome M143 or later, go to <code>chrome://flags#geolocation-element</code> and enable the experiment.</p>
+        <p>Alternatively in Chrome M121 or later, follow these instructions to enable experimental support:</p>
+        <ul>
+          <li>Shut down the browser process.</li>
+          <li>
+            Restart the browser with these command line flag:
+            <pre>--enable-features=PermissionElement,GeolocationElement</pre>
+          </li>
+          <li>
+            Ensure the flags actually took effect by verifying they appear on:
+            <pre>chrome://version</pre>
+          </li>
+        </ul>
+      </div>
+    </div>
 
     <script>
       // Get references to the DOM elements
@@ -54,7 +75,6 @@
 
       /**
        * A helper function to create a formatted log string from a location event.
-       * This avoids code duplication.
        * @param {Event} event - The 'onlocation' event object.
        * @returns {string} A formatted HTML string.
        */
