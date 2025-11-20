@@ -63,6 +63,16 @@
         </geolocation>
         <div id="auto-output" class="output">Waiting for permission...</div>
       </span>
+      <span class="permission-element-box">
+        <h2>3. Manual Precise Location Request</h2>
+        <p>
+          This element has the <code>accuracymode=precise</code>, no autolocate.
+        </p>
+        <geolocation id="geo-manual-precise" accuracymode="precise" tabindex="0">
+          Find My Location (precise, no autolocate)
+        </geolocation>
+        <div id="manual-output-precise" class="output">Waiting for permission...</div>
+      </span>
       <div class="demo-instructions">
         <h3>Demo Instructions</h3>
         <p>In Chrome M143 or later, go to <code>chrome://flags#geolocation-element</code> and enable the experiment.</p>
@@ -84,9 +94,11 @@
     <script>
       // Get references to the DOM elements
       const manualGeoElement = document.getElementById('geo-manual');
+      const manualPreciseGeoElement = document.getElementById('geo-manual-precise');
       const autoGeoElement = document.getElementById('geo-auto');
       const manualOutputDiv = document.getElementById('manual-output');
       const autoOutputDiv = document.getElementById('auto-output');
+      const manualPreciseOutputDiv = document.getElementById('manual-output-precise');
 
       /**
        * A helper function to create a formatted log string from a location event.
@@ -118,6 +130,10 @@
       // Assign a specific handler for the automatic element
       autoGeoElement.onlocation = function(event) {
         autoOutputDiv.innerHTML = createLogEntry(event);
+      };
+      
+      manualPreciseGeoElement.onlocation = function(event) {
+        manualPreciseOutputDiv.innerHTML = createLogEntry(event);
       };
     </script>
   </body>
