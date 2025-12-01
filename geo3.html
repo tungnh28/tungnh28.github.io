@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geolocation Concurrency Test</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #f4f4f9;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #console-container {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 6px;
+            height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', Courier, monospace;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: 1px solid #333;
+        }
+        .log-entry {
+            margin-bottom: 8px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 4px;
+            line-height: 1.4;
+        }
+        .info { color: #569cd6; } /* Blue */
+        .success { color: #6a9955; font-weight: bold; } /* Green */
+        .error { color: #f44747; font-weight: bold; } /* Red */
+        .timestamp { color: #888; font-size: 0.85em; margin-right: 10px; }
+    </style>
+</head>
+<body>
+
+    <h1>Geolocation Stress Test</h1>
+    <p>This will fire 10 <code>getCurrentPosition</code> requests immediately without waiting for previous ones to finish.</p>
+    
+    <button onclick="runTests()">🚀 Fire 10 Requests</button>
+
+    <div id="console-container">
+        <div>Ready to start... click the button above.</div>
+    </div>
+
+    <script>
+        const logContainer = document.getElementById('console-container');
+
+        // Helper to append logs to the DIV
+        function addLog(message, type = 'normal') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            
+            // Get current time for the log display
+            const now = new Date();
+            const timeString = now.toLocaleTimeString() + '.' + String(now.getMilliseconds()).padStart(3, '0');
+            
+            entry.innerHTML = `<span class="timestamp">[${timeString}]</span> ${message}`;
+            logContainer.appendChild(entry);
+            
+            // Auto-scroll to bottom
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function runTests() {
+            // Clear previous logs
+            logContainer.innerHTML = '';
+            addLog("🚀 Starting batch of 10 simultaneous requests...", "info");
+
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 10000, // 10 seconds
+                maximumAge: 0   // Force fresh data
+            };
+
+            // Loop 10 times
+            for (let i = 1; i <= 10; i++) {
+                const requestId = i;
+                const startTime = Date.now();
+
+                addLog(`Request #${requestId}: Sent to browser API...`, "info");
+
+                navigator.geolocation.getCurrentPosition(
+                    // Success Callback
+                    (position) => {
+                        const duration = Date.now() - startTime;
+                        const coords = `${position.coords.latitude.toFixed(5)}, ${position.coords.longitude.toFixed(5)}`;
+                        addLog(`✅ Request #${requestId} DONE in ${duration}ms <br>&nbsp;&nbsp;&nbsp;Location: ${coords}`, "success");
+                    },
+                    // Error Callback
+                    (error) => {
+                        const duration = Date.now() - startTime;
+                        let errMsg = '';
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED: errMsg = "User denied permission."; break;
+                            case error.POSITION_UNAVAILABLE: errMsg = "Position unavailable."; break;
+                            case error.TIMEOUT: errMsg = "Request timed out."; break;
+                            default: errMsg = error.message;
+                        }
+                        addLog(`❌ Request #${requestId} FAILED in ${duration}ms <br>&nbsp;&nbsp;&nbsp;Reason: ${errMsg}`, "error");
+                    },
+                    options
+                );
+            }
+        }
+    </script>
+</body>
+</html>
