@@ -131,7 +131,7 @@
             // Optional: Clear previous runs automatically? 
             // Let's not clear logs automatically so we can compare, 
             // but we MUST clear watchers or browsers will choke.
-            if (activeWatchIds.length > 0) {
+            if ((mode === 'WATCH' || mode === 'MIX') && activeWatchIds.length > 0) {
                 addLog(`⚠️ Clearing ${activeWatchIds.length} previous watchers before starting...`, "error");
                 activeWatchIds.forEach(id => navigator.geolocation.clearWatch(id));
                 activeWatchIds = [];
