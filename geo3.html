@@ -3,143 +3,192 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Geolocation Concurrency Test</title>
+    <title>Geolocation Concurrency: GCP vs Watch</title>
     <style>
         body {
             font-family: system-ui, -apple-system, sans-serif;
             padding: 20px;
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             background-color: #f4f4f9;
         }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
             margin-bottom: 20px;
         }
-        button:hover {
-            background-color: #0056b3;
+        button {
+            padding: 12px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-weight: 600;
+            transition: background 0.2s;
         }
+        .btn-gcp { background-color: #007bff; } /* Blue */
+        .btn-gcp:hover { background-color: #0056b3; }
+        
+        .btn-watch { background-color: #e88b00; } /* Orange */
+        .btn-watch:hover { background-color: #cc7a00; }
+
+        .btn-mix { background-color: #6f42c1; } /* Purple */
+        .btn-mix:hover { background-color: #553098; }
+
+        .btn-stop { background-color: #dc3545; } /* Red */
+        .btn-stop:hover { background-color: #a71d2a; }
+
         #console-container {
             background-color: #1e1e1e;
             color: #d4d4d4;
             padding: 15px;
             border-radius: 6px;
-            height: 400px;
+            height: 500px;
             overflow-y: auto;
             font-family: 'Courier New', Courier, monospace;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             border: 1px solid #333;
         }
         .log-entry {
-            margin-bottom: 8px;
+            margin-bottom: 4px;
             border-bottom: 1px solid #333;
             padding-bottom: 4px;
+            font-size: 13px;
             line-height: 1.4;
         }
-        .info { color: #569cd6; } /* Blue */
-        .success { color: #6a9955; font-weight: bold; } /* Green */
-        .error { color: #f44747; font-weight: bold; } /* Red */
-        .timestamp { color: #888; font-size: 0.85em; margin-right: 10px; }
+        .info { color: #569cd6; } 
+        .success { color: #6a9955; } 
+        .watch-update { color: #dcdcaa; } /* Yellowish */
+        .error { color: #f44747; } 
+        .timestamp { color: #888; margin-right: 8px; user-select: none; }
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            margin-right: 5px;
+            color: #1e1e1e;
+            font-weight: bold;
+        }
+        .badge-gcp { background-color: #6a9955; }
+        .badge-watch { background-color: #e88b00; }
     </style>
 </head>
 <body>
 
-    <h1>Geolocation Stress Test</h1>
-    <p>This will fire 10 <code>getCurrentPosition</code> requests immediately without waiting for previous ones to finish.</p>
+    <h1>Geolocation Method Stress Test</h1>
+    <p>
+        <strong>GCP:</strong> Fires <code>getCurrentPosition</code> (One-shot).<br>
+        <strong>Watch:</strong> Fires <code>watchPosition</code> (Continuous stream).
+    </p>
     
-    <button onclick="runTests()">🚀 Fire 10 Requests</button>
+    <div class="controls">
+        <button class="btn-gcp" onclick="startTest('GCP')">1. Fire 10 GCP</button>
+        <button class="btn-watch" onclick="startTest('WATCH')">2. Fire 10 Watch</button>
+        <button class="btn-mix" onclick="startTest('MIX')">3. Fire 10 GCP + 10 Watch</button>
+        <button class="btn-stop" onclick="stopAndClear()">⛔ Stop & Clear Logs</button>
+    </div>
 
     <div id="console-container">
-        <div>Ready to start... click the button above.</div>
+        <div>Ready...</div>
     </div>
 
     <script>
         const logContainer = document.getElementById('console-container');
+        let activeWatchIds = []; // Track active watchers to clear them later
 
-        // Helper to append logs to the DIV
+        const geoOptions = {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+        };
+
         function addLog(message, type = 'normal') {
             const entry = document.createElement('div');
             entry.className = `log-entry ${type}`;
-            
-            // Get current time for the log display
             const now = new Date();
             const timeString = now.toLocaleTimeString() + '.' + String(now.getMilliseconds()).padStart(3, '0');
-            
             entry.innerHTML = `<span class="timestamp">[${timeString}]</span> ${message}`;
             logContainer.appendChild(entry);
-            
-            // Auto-scroll to bottom
             logContainer.scrollTop = logContainer.scrollHeight;
         }
 
-        function runTests() {
-            // Clear previous logs
+        function stopAndClear() {
+            // 1. Clear all active watchers
+            if (activeWatchIds.length > 0) {
+                activeWatchIds.forEach(id => navigator.geolocation.clearWatch(id));
+                addLog(`⛔ Stopped ${activeWatchIds.length} active watchers.`, "info");
+                activeWatchIds = [];
+            }
+            // 2. Clear visual logs
             logContainer.innerHTML = '';
-            addLog("🚀 Starting batch of 10 simultaneous requests...", "info");
+            addLog("Logs cleared. Ready for next test.", "info");
+        }
 
-            const options = {
-                enableHighAccuracy: true,
-                timeout: 10000, // 10 seconds
-                maximumAge: 0   // Force fresh data
-            };
+        function startTest(mode) {
+            // Optional: Clear previous runs automatically? 
+            // Let's not clear logs automatically so we can compare, 
+            // but we MUST clear watchers or browsers will choke.
+            if (activeWatchIds.length > 0) {
+                addLog(`⚠️ Clearing ${activeWatchIds.length} previous watchers before starting...`, "error");
+                activeWatchIds.forEach(id => navigator.geolocation.clearWatch(id));
+                activeWatchIds = [];
+            }
 
-            // Loop 10 times
+            addLog(`🚀 Starting Test: <strong>${mode}</strong>`, "info");
+
+            if (mode === 'GCP' || mode === 'MIX') {
+                fireBatchGCP();
+            }
+            if (mode === 'WATCH' || mode === 'MIX') {
+                fireBatchWatch();
+            }
+        }
+
+        function fireBatchGCP() {
+            addLog("--> Firing 10 getCurrentPosition (GCP) requests...", "info");
             for (let i = 1; i <= 10; i++) {
-                const requestId = i;
-                const startTime = Date.now();
-
-                addLog(`Request #${requestId}: Sent to browser API...`, "info");
-
+                const reqId = i;
+                const start = Date.now();
+                
                 navigator.geolocation.getCurrentPosition(
-                    // Success Callback
-                    (position) => {
-                        const duration = Date.now() - startTime;
-                        const coords = `${position.coords.latitude.toFixed(5)}, ${position.coords.longitude.toFixed(5)}`;
-                        addLog(`✅ Request #${requestId} DONE in ${duration}ms <br>&nbsp;&nbsp;&nbsp;Location: ${coords}`, "success");
+                    (pos) => {
+                        const dur = Date.now() - start;
+                        const coords = `${pos.coords.latitude.toFixed(5)},${pos.coords.longitude.toFixed(5)}`;
+                        addLog(`<span class="badge badge-gcp">GCP #${reqId}</span> Success (${dur}ms): ${coords}`, "success");
                     },
-                    // Error Callback
-                    (error) => {
-                        const duration = Date.now() - startTime;
-                        let errMsg = '';
-                        switch(error.code) {
-                            case error.PERMISSION_DENIED: errMsg = "User denied permission."; break;
-                            case error.POSITION_UNAVAILABLE: errMsg = "Position unavailable."; break;
-                            case error.TIMEOUT: errMsg = "Request timed out."; break;
-                            default: errMsg = error.message;
-                        }
-                        addLog(`❌ Request #${requestId} FAILED in ${duration}ms <br>&nbsp;&nbsp;&nbsp;Reason: ${errMsg}`, "error");
+                    (err) => {
+                        const dur = Date.now() - start;
+                        addLog(`<span class="badge badge-gcp">GCP #${reqId}</span> Failed (${dur}ms): ${err.message}`, "error");
                     },
-                    options
-                );
-
-                navigator.geolocation.watchPosition(
-                    // Success Callback
-                    (position) => {
-                        const duration = Date.now() - startTime;
-                        const coords = `${position.coords.latitude.toFixed(5)}, ${position.coords.longitude.toFixed(5)}`;
-                        addLog(`✅ Request #${requestId} DONE in ${duration}ms <br>&nbsp;&nbsp;&nbsp;Location: ${coords}`, "success");
-                    },
-                    // Error Callback
-                    (error) => {
-                        const duration = Date.now() - startTime;
-                        let errMsg = '';
-                        switch(error.code) {
-                            case error.PERMISSION_DENIED: errMsg = "User denied permission."; break;
-                            case error.POSITION_UNAVAILABLE: errMsg = "Position unavailable."; break;
-                            case error.TIMEOUT: errMsg = "Request timed out."; break;
-                            default: errMsg = error.message;
-                        }
-                        addLog(`❌ Request #${requestId} FAILED in ${duration}ms <br>&nbsp;&nbsp;&nbsp;Reason: ${errMsg}`, "error");
-                    },
-                    options
+                    geoOptions
                 );
             }
+        }
+
+        function fireBatchWatch() {
+            addLog("--> Firing 10 watchPosition (WATCH) requests...", "info");
+            for (let i = 1; i <= 10; i++) {
+                const reqId = i;
+                
+                // watchPosition returns an ID immediately
+                const watchId = navigator.geolocation.watchPosition(
+                    (pos) => {
+                        const coords = `${pos.coords.latitude.toFixed(5)},${pos.coords.longitude.toFixed(5)}`;
+                        const acc = Math.round(pos.coords.accuracy);
+                        addLog(`<span class="badge badge-watch">WATCH #${reqId}</span> Update [ID:${watchId}]: ${coords} (Acc:${acc}m)`, "watch-update");
+                    },
+                    (err) => {
+                        addLog(`<span class="badge badge-watch">WATCH #${reqId}</span> Error [ID:${watchId}]: ${err.message}`, "error");
+                    },
+                    geoOptions
+                );
+                
+                activeWatchIds.push(watchId);
+            }
+            addLog(`--> Registered ${activeWatchIds.length} watchers (ID: ${activeWatchIds[0]} to ${activeWatchIds[activeWatchIds.length-1]})`, "info");
         }
     </script>
 </body>
