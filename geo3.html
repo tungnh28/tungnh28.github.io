@@ -162,7 +162,7 @@
 
         function startTest(mode) {
             // Optional cleanup
-            if (activeWatchIds.length > 0) {
+            if (activeWatchIds.length > 0 && (mode === 'WATCH' || mode === 'MIX')) {
                 addLog(`⚠️ Clearing ${activeWatchIds.length} previous watchers before starting...`, "error");
                 activeWatchIds.forEach(id => navigator.geolocation.clearWatch(id));
                 activeWatchIds = [];
@@ -171,11 +171,11 @@
             const count = getBatchSize();
             addLog(`🚀 Starting Test: <strong>${mode}</strong> with Batch Size: <strong>${count}</strong>`, "info");
 
-            if (mode === 'GCP' || mode === 'MIX') {
-                fireBatchGCP(count);
-            }
             if (mode === 'WATCH' || mode === 'MIX') {
                 fireBatchWatch(count);
+            }
+            if (mode === 'GCP' || mode === 'MIX') {
+                fireBatchGCP(count);
             }
         }
 
