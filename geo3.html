@@ -17,6 +17,28 @@
             gap: 10px;
             flex-wrap: wrap;
             margin-bottom: 20px;
+            align-items: center;
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .input-group {
+            display: flex;
+            align-items: center;
+            margin-right: 10px;
+        }
+        .input-group label {
+            font-weight: 600;
+            margin-right: 8px;
+            color: #333;
+        }
+        input[type="number"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 60px;
+            font-size: 14px;
         }
         button {
             padding: 12px 20px;
@@ -85,9 +107,14 @@
     </p>
     
     <div class="controls">
-        <button class="btn-gcp" onclick="startTest('GCP')">1. Fire 10 GCP</button>
-        <button class="btn-watch" onclick="startTest('WATCH')">2. Fire 10 Watch</button>
-        <button class="btn-mix" onclick="startTest('MIX')">3. Fire 10 GCP + 10 Watch</button>
+        <div class="input-group">
+            <label for="batch-size">Batch Size:</label>
+            <input type="number" id="batch-size" value="10" min="1" max="100">
+        </div>
+
+        <button class="btn-gcp" onclick="startTest('GCP')">Fire Batch GCP</button>
+        <button class="btn-watch" onclick="startTest('WATCH')">Fire Batch Watch</button>
+        <button class="btn-mix" onclick="startTest('MIX')">Fire Both (Mix)</button>
         <button class="btn-stop" onclick="stopAndClear()">⛔ Stop & Clear Logs</button>
     </div>
 
@@ -100,10 +127,16 @@
         let activeWatchIds = []; // Track active watchers to clear them later
 
         const geoOptions = {
-            // enableHighAccuracy: true,
+            enableHighAccuracy: true,
             timeout: 10000,
             maximumAge: 0
         };
+
+        function getBatchSize() {
+            const val = document.getElementById('batch-size').value;
+            // Default to 10 if empty or invalid
+            return parseInt(val) > 0 ? parseInt(val) : 10;
+        }
 
         function addLog(message, type = 'normal') {
             const entry = document.createElement('div');
@@ -128,25 +161,27 @@
         }
 
         function startTest(mode) {
-            if ((mode === 'WATCH' || mode === 'MIX') && activeWatchIds.length > 0) {
+            // Optional cleanup
+            if (activeWatchIds.length > 0) {
                 addLog(`⚠️ Clearing ${activeWatchIds.length} previous watchers before starting...`, "error");
                 activeWatchIds.forEach(id => navigator.geolocation.clearWatch(id));
                 activeWatchIds = [];
             }
 
-            addLog(`🚀 Starting Test: <strong>${mode}</strong>`, "info");
+            const count = getBatchSize();
+            addLog(`🚀 Starting Test: <strong>${mode}</strong> with Batch Size: <strong>${count}</strong>`, "info");
 
             if (mode === 'GCP' || mode === 'MIX') {
-                fireBatchGCP();
+                fireBatchGCP(count);
             }
             if (mode === 'WATCH' || mode === 'MIX') {
-                fireBatchWatch();
+                fireBatchWatch(count);
             }
         }
 
-        function fireBatchGCP() {
-            addLog("--> Firing 10 getCurrentPosition (GCP) requests...", "info");
-            for (let i = 1; i <= 10; i++) {
+        function fireBatchGCP(count) {
+            addLog(`--> Firing ${count} getCurrentPosition (GCP) requests...`, "info");
+            for (let i = 1; i <= count; i++) {
                 const reqId = i;
                 const start = Date.now();
                 
@@ -165,12 +200,11 @@
             }
         }
 
-        function fireBatchWatch() {
-            addLog("--> Firing 10 watchPosition (WATCH) requests...", "info");
-            for (let i = 1; i <= 10; i++) {
+        function fireBatchWatch(count) {
+            addLog(`--> Firing ${count} watchPosition (WATCH) requests...`, "info");
+            for (let i = 1; i <= count; i++) {
                 const reqId = i;
                 
-                // watchPosition returns an ID immediately
                 const watchId = navigator.geolocation.watchPosition(
                     (pos) => {
                         const coords = `${pos.coords.latitude.toFixed(5)},${pos.coords.longitude.toFixed(5)}`;
@@ -185,7 +219,7 @@
                 
                 activeWatchIds.push(watchId);
             }
-            addLog(`--> Registered ${activeWatchIds.length} watchers (ID: ${activeWatchIds[0]} to ${activeWatchIds[activeWatchIds.length-1]})`, "info");
+            addLog(`--> Registered ${activeWatchIds.length} watchers`, "info");
         }
     </script>
 </body>
