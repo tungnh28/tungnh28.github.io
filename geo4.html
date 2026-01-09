@@ -25,6 +25,18 @@
             font-style: italic;
             color: #555;
         }
+        button.replace-btn {
+            padding: 10px 20px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button.replace-btn:hover {
+            background-color: #c82333;
+        }
     </style>
 </head>
 <body>
@@ -66,14 +78,12 @@
 
     <section>
         <h2>4. Created via setInnerHTML</h2>
-        <p>This geolocation element is created dynamically in the document by setting <code>innerHTML</code> on a container.</p>
+        <p>This geolocation element is created dynamically in the main document by setting <code>innerHTML</code>.</p>
         
-        <div id="container-innerhtml">
-            </div>
+        <div id="container-innerhtml"></div>
 
         <script>
             const container = document.getElementById('container-innerhtml');
-            // Injecting the geolocation element using setInnerHTML
             container.innerHTML = `
                 <geolocation id="geo4">
                     Find My Location (innerHTML)
@@ -81,21 +91,87 @@
                 <div id="output4" class="status">Waiting for injection...</div>
             `;
             
-            // Add event listeners to the newly created element
             const geo4 = document.getElementById('geo4');
             const output4 = document.getElementById('output4');
             
             if (geo4) {
                 output4.textContent = "Waiting for user interaction... (Injected successfully)";
-                
-                // Example listener to show it works
                 geo4.onclick = () => {
                     output4.textContent = "Clicked! Requesting location...";
                 };
-                
-                // You can add standard geolocation event listeners here as well
-                // e.g. geo4.addEventListener('geolocate', handleEvent);
             }
+        </script>
+    </section>
+
+    <section>
+        <h2>5. Replace Page with New Document</h2>
+        <p>Clicking the button below will <strong>wipe this current page</strong> and replace it with a brand new document created via JavaScript (same tab).</p>
+        
+        <button id="replace-doc-btn" class="replace-btn">Replace Current Document</button>
+
+        <script>
+            document.getElementById('replace-doc-btn').onclick = () => {
+                // 1. Open the current document for writing (this wipes the previous content)
+                document.open();
+
+                // 2. Write a completely new HTML structure
+                document.write(`
+                    <!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                        <meta charset="UTF-8">
+                        <title>New Document Context</title>
+                        <style>
+                            body { 
+                                font-family: sans-serif; 
+                                padding: 40px; 
+                                text-align: center; 
+                                background-color: #eef;
+                            }
+                            .container {
+                                background: white;
+                                padding: 30px;
+                                border-radius: 8px;
+                                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                                display: inline-block;
+                            }
+                            h1 { margin-top: 0; }
+                            .back-link { margin-top: 20px; display: block; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="container">
+                            <h1>Replaced Document</h1>
+                            <p>This document was created dynamically using <code>document.write()</code>.</p>
+                            
+                            <geolocation id="geo-replaced">
+                                Find Location (Dynamic Doc)
+                            </geolocation>
+                            
+                            <div id="status-replaced" style="margin-top:15px; color: #555;">Waiting...</div>
+
+                            <a href="" class="back-link" onclick="location.reload(); return false;">&larr; Refresh to go back</a>
+                        </div>
+
+                        <script>
+                            // This script runs inside the NEW document structure
+                            const geoBtn = document.getElementById('geo-replaced');
+                            const statusDiv = document.getElementById('status-replaced');
+
+                            if (geoBtn) {
+                                geoBtn.onclick = () => {
+                                    statusDiv.innerText = "Clicked in the replaced document!";
+                                    console.log("Geolocation requested in dynamic document.");
+                                };
+                            }
+                        <\/script>
+                    </body>
+                    </html>
+                `);
+
+                // 3. Close the document stream to render the content
+                document.close();
+            };
         </script>
     </section>
     <section>
@@ -114,7 +190,7 @@
     </section>
 
     <script>
-        // Basic logic for the static elements (1-3) to update their status text
+        // Basic logic for the static elements (1-3)
         function setupLogger(geoId, outputId) {
             const geoEl = document.getElementById(geoId);
             const outEl = document.getElementById(outputId);
@@ -123,9 +199,6 @@
                 geoEl.onclick = () => {
                     outEl.textContent = "Clicked. Requesting location...";
                 };
-                
-                // Note: Actual geolocation API events would be handled here
-                // e.g. geoEl.addEventListener('success', (e) => ...);
             }
         }
 
