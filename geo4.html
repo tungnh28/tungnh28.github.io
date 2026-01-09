@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geolocation Elements (Separate Outputs)</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        section {
+            margin-bottom: 30px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 20px;
+        }
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        .status {
+            margin-top: 10px;
+            font-style: italic;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Geolocation Element Demo</h1>
+
+    <section>
+        <h2>1. Manual Location Request</h2>
+        <p>Click the element below to request the current location.</p>
+        
+        <geolocation id="geo1">
+            Find My Location
+        </geolocation>
+        
+        <div id="output1" class="status">Waiting for user interaction...</div>
+    </section>
+
+    <section>
+        <h2>2. Automatic Location Request</h2>
+        <p>This element has the <code>autolocate</code> attribute and will request the location on page load.</p>
+        
+        <geolocation id="geo2" autolocate>
+            Find My Location (autolocate)
+        </geolocation>
+        
+        <div id="output2" class="status">Waiting for permission...</div>
+    </section>
+
+    <section>
+        <h2>3. Manual Precise Location Request</h2>
+        <p>This element has the <code>accuracymode="precise"</code>, no autolocate.</p>
+        
+        <geolocation id="geo3" accuracymode="precise">
+            Find My Location (precise, no autolocate)
+        </geolocation>
+        
+        <div id="output3" class="status">Waiting for permission...</div>
+    </section>
+
+    <section>
+        <h2>4. Created via setInnerHTML</h2>
+        <p>This geolocation element is created dynamically in the document by setting <code>innerHTML</code> on a container.</p>
+        
+        <div id="container-innerhtml">
+            </div>
+
+        <script>
+            const container = document.getElementById('container-innerhtml');
+            // Injecting the geolocation element using setInnerHTML
+            container.innerHTML = `
+                <geolocation id="geo4">
+                    Find My Location (innerHTML)
+                </geolocation>
+                <div id="output4" class="status">Waiting for injection...</div>
+            `;
+            
+            // Add event listeners to the newly created element
+            const geo4 = document.getElementById('geo4');
+            const output4 = document.getElementById('output4');
+            
+            if (geo4) {
+                output4.textContent = "Waiting for user interaction... (Injected successfully)";
+                
+                // Example listener to show it works
+                geo4.onclick = () => {
+                    output4.textContent = "Clicked! Requesting location...";
+                };
+                
+                // You can add standard geolocation event listeners here as well
+                // e.g. geo4.addEventListener('geolocate', handleEvent);
+            }
+        </script>
+    </section>
+    <section>
+        <h3>Demo Instructions</h3>
+        <p>In Chrome M143 or later, go to <code>chrome://flags#geolocation-element</code> and enable the experiment.</p>
+        <p>Alternatively in Chrome M121 or later, follow these instructions to enable experimental support:</p>
+        <ul>
+            <li>Shut down the browser process.</li>
+            <li>Restart the browser with this command line flag:
+                <pre><code>--enable-features=PermissionElement,GeolocationElement</code></pre>
+            </li>
+            <li>Ensure the flags actually took effect by verifying they appear on:
+                <pre><code>chrome://version</code></pre>
+            </li>
+        </ul>
+    </section>
+
+    <script>
+        // Basic logic for the static elements (1-3) to update their status text
+        function setupLogger(geoId, outputId) {
+            const geoEl = document.getElementById(geoId);
+            const outEl = document.getElementById(outputId);
+            
+            if (geoEl) {
+                geoEl.onclick = () => {
+                    outEl.textContent = "Clicked. Requesting location...";
+                };
+                
+                // Note: Actual geolocation API events would be handled here
+                // e.g. geoEl.addEventListener('success', (e) => ...);
+            }
+        }
+
+        setupLogger('geo1', 'output1');
+        setupLogger('geo2', 'output2');
+        setupLogger('geo3', 'output3');
+    </script>
+</body>
+</html>
