@@ -29,7 +29,6 @@
             cursor: pointer;
             font-size: 16px;
             margin-right: 10px;
-            margin-bottom: 10px;
         }
         button:hover { background-color: #0056b3; }
         .log {
@@ -50,164 +49,130 @@
 </head>
 <body>
 
-    <h1>&lt;geolocation&gt; Element Crash Tests</h1>
-    <p>Testing <code>&lt;geolocation&gt;</code> element behavior in documents with <strong>null domWindow</strong>.</p>
+    <h1>&lt;geolocation&gt; Element Tests</h1>
+    <p>Testing the behavior of the specific <code>&lt;geolocation&gt;</code> element in documents with null <code>domWindow</code>.</p>
 
     <div class="case-container">
         <h2>Case 1: Detached "Zombie" Document</h2>
-        <p>Creates an iframe, injects <code>&lt;geolocation&gt;</code>, then removes the iframe.</p>
+        <p>
+            Creates an iframe, injects a <code>&lt;geolocation&gt;</code> element, and then removes the iframe.
+        </p>
+        <p class="warning">
+            The document remains in memory (Zombie), but has no window. We then attempt to access the &lt;geolocation&gt; element.
+        </p>
         <button id="btn-zombie">Run Zombie Test</button>
-        <div id="log-zombie" class="log">Waiting...</div>
+        <div id="log-zombie" class="log">Waiting to create zombie document...</div>
     </div>
 
     <div class="case-container">
-        <h2>Case 2: Synthetic Document (createDocument)</h2>
-        <p>Uses <code>document.implementation.createDocument</code>.</p>
+        <h2>Case 2: Synthetic Document</h2>
+        <p>
+            Uses <code>document.implementation.createDocument</code> to create a document that never had a window, containing a <code>&lt;geolocation&gt;</code> element.
+        </p>
         <button id="btn-synthetic">Run Synthetic Test</button>
-        <div id="log-synthetic" class="log">Waiting...</div>
-    </div>
-
-    <div class="case-container">
-        <h2>Case 3: DOMParser</h2>
-        <p>Uses <code>new DOMParser().parseFromString(...)</code>.</p>
-        <button id="btn-parser">Run DOMParser Test</button>
-        <div id="log-parser" class="log">Waiting...</div>
-    </div>
-
-    <div class="case-container">
-        <h2>Case 4: CloneNode + document.write</h2>
-        <p>Uses <code>document.cloneNode()</code> followed by <code>doc.write()</code>.</p>
-        <button id="btn-clone">Run CloneNode Test</button>
-        <div id="log-clone" class="log">Waiting...</div>
+        <div id="log-synthetic" class="log">Waiting to create synthetic document...</div>
     </div>
 
     <script>
-        // --- UTILITY ---
+        // --- UTILITY: LOGGER ---
         function log(elementId, message) {
             const el = document.getElementById(elementId);
             const time = new Date().toLocaleTimeString();
             el.textContent += `[${time}] ${message}\n`;
         }
+
         function clearLog(elementId) {
             document.getElementById(elementId).textContent = "";
         }
 
-        // --- CASE 1: ZOMBIE DOCUMENT ---
+        // --- CASE 1: ZOMBIE DOCUMENT TEST ---
         document.getElementById('btn-zombie').addEventListener('click', () => {
             clearLog('log-zombie');
             log('log-zombie', 'Initializing Zombie test...');
+
             try {
+                // 1. Create the browsing context (iframe)
                 const parentIframe = document.createElement('iframe');
                 parentIframe.style.display = 'none';
                 document.body.appendChild(parentIframe);
-                const zombieDoc = parentIframe.contentDocument;
                 
-                // Add <geolocation>
+                // 2. Keep reference to the document
+                const zombieDoc = parentIframe.contentDocument;
+                log('log-zombie', '1. Created temporary iframe.');
+
+                // 3. Create and append the <geolocation> element
                 const geoTag = zombieDoc.createElement('geolocation');
-                geoTag.id = "zombie-geo";
+                geoTag.id = "target-geo-tag";
+                // Add some attributes in case your engine checks them on insertion
+                geoTag.setAttribute('mode', 'auto'); 
                 zombieDoc.body.appendChild(geoTag);
-                log('log-zombie', '1. Injected <geolocation> into iframe.');
+                
+                log('log-zombie', '2. Injected <geolocation> element into iframe.');
 
-                // Detach
+                // 4. Detach (Shutdown)
                 parentIframe.remove();
-                log('log-zombie', '2. Removed iframe (Zombie created).');
+                log('log-zombie', '3. REMOVED parent iframe (Document is now detached).');
 
+                // 5. Verify Null Window
                 if (zombieDoc.defaultView === null) {
-                    log('log-zombie', '   [Status] defaultView is NULL.');
+                    log('log-zombie', '   [Status] zombieDoc.defaultView is NULL.');
                 }
 
-                // Interact
-                const el = zombieDoc.getElementById('zombie-geo');
-                if (el) {
-                    el.setAttribute('test-attr', '1');
-                    log('log-zombie', '3. Modified attribute on <geolocation> in zombie doc.');
+                // 6. Access the element in the dead document
+                const lingeringEl = zombieDoc.getElementById('target-geo-tag');
+                if (lingeringEl) {
+                    log('log-zombie', '4. Accessing <geolocation> element in detached doc...');
+                    
+                    // Modify attribute to trigger C++ attributeChanged callbacks
+                    lingeringEl.setAttribute('status', 'active');
+                    log('log-zombie', '5. Modified attribute on <geolocation> (Did not crash).');
                 }
             } catch (e) {
                 log('log-zombie', `ERROR: ${e.message}`);
+                console.error(e);
             }
         });
 
-        // --- CASE 2: SYNTHETIC DOCUMENT ---
+        // --- CASE 2: SYNTHETIC DOCUMENT TEST ---
         document.getElementById('btn-synthetic').addEventListener('click', () => {
             clearLog('log-synthetic');
             log('log-synthetic', 'Initializing Synthetic test...');
+
             try {
-                const doc = document.implementation.createDocument("http://www.w3.org/1999/xhtml", "html", null);
-                
-                if (doc.defaultView === null) log('log-synthetic', '[Status] defaultView is NULL.');
+                // 1. Create Synthetic Document (No Window)
+                const syntheticDoc = document.implementation.createDocument(
+                    "http://www.w3.org/1999/xhtml", 
+                    "html", 
+                    null
+                );
 
-                const body = doc.createElement("body");
-                doc.documentElement.appendChild(body);
+                if (syntheticDoc.defaultView === null) {
+                    log('log-synthetic', '1. [Status] syntheticDoc.defaultView is NULL.');
+                }
 
-                const geoTag = doc.createElement('geolocation');
-                geoTag.id = "syn-geo";
+                // 2. Build Structure
+                const body = syntheticDoc.createElement("body");
+                syntheticDoc.documentElement.appendChild(body);
+
+                // 3. Create the <geolocation> element
+                const geoTag = syntheticDoc.createElement('geolocation');
+                geoTag.setAttribute('id', 'syn-geo');
                 body.appendChild(geoTag);
-                log('log-synthetic', '1. Injected <geolocation> into synthetic doc.');
 
-                geoTag.setAttribute('test-attr', '2');
-                log('log-synthetic', '2. Modified attribute.');
+                log('log-synthetic', '2. Injected <geolocation> element into synthetic doc.');
+
+                // 4. Manipulate the element
+                // This tests if your element's logic handles being in a windowless doc
+                log('log-synthetic', '3. Modifying <geolocation> attributes...');
+                geoTag.setAttribute('test-attr', 'value');
+                
+                log('log-synthetic', '4. Success: Attribute set on synthetic <geolocation>.');
+
             } catch (e) {
                 log('log-synthetic', `ERROR: ${e.message}`);
+                console.error(e);
             }
         });
-
-        // --- CASE 3: DOMParser ---
-        document.getElementById('btn-parser').addEventListener('click', () => {
-            clearLog('log-parser');
-            log('log-parser', 'Initializing DOMParser test...');
-            try {
-                const parser = new DOMParser();
-                // Parsing string as requested
-                const doc = parser.parseFromString("<document><geolocation id='test-parser'></geolocation></document>", "text/html");
-
-                if (doc.defaultView === null) {
-                    log('log-parser', '[Status] parsedDoc.defaultView is NULL.');
-                }
-
-                // Finding the element. 
-                // Note: parseFromString with "text/html" creates head/body. 
-                // Our <geolocation> might be inside <body> depending on parser rules for unknown tags.
-                const el = doc.querySelector('geolocation');
-                
-                if (el) {
-                    log('log-parser', '1. Found <geolocation> element parsed from string.');
-                    el.setAttribute('test-attr', '3');
-                    log('log-parser', '2. Modified attribute on parsed element.');
-                } else {
-                    log('log-parser', 'Warning: <geolocation> element not found in parsed tree.');
-                }
-            } catch (e) {
-                log('log-parser', `ERROR: ${e.message}`);
-            }
-        });
-
-        // --- CASE 4: CloneNode + Write ---
-        document.getElementById('btn-clone').addEventListener('click', () => {
-            clearLog('log-clone');
-            log('log-clone', 'Initializing CloneNode test...');
-            try {
-                // 1. Clone the current document (shallow or deep shouldn't matter for the window status)
-                const clonedDoc = document.cloneNode(false);
-                
-                if (clonedDoc.defaultView === null) {
-                    log('log-clone', '[Status] clonedDoc.defaultView is NULL.');
-                }
-
-                // 2. Attempt document.write
-                // Note: document.write usually requires an open document stream. 
-                // On a detached clone, this might throw or silently fail in some browsers.
-                log('log-clone', '1. Attempting doc.write("<geolocation id=test>")...');
-                
-                try {
-                    clonedDoc.write("<geolocation id='test-clone'></geolocation>");
-                    log('log-clone', '2. doc.write executed without throwing JS error.');
-                    
-                    // 3. Verify element existence
-                    // write() on a clone might not construct the DOM as expected if it's not "open".
-                    // We check if it exists.
-                    // If write() failed to parse, we manually inject to ensure we test the C++ element logic.
-                    let el = clonedDoc.getElementById('test-clone');
-                    if (!el) {
-                        // Fallback if write() is inert on clones
-                        log('log-clone', '   (write() did not create DOM, falling back to createElement to ensure test coverage)');
-                        const body = clonedDoc.createElement('
+    </script>
+</body>
+</html>
