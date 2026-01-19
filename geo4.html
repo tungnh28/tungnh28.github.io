@@ -6,205 +6,133 @@
     <title>Geolocation Elements (Separate Outputs)</title>
     <style>
         body {
-            font-family: sans-serif;
-            margin: 20px;
-            line-height: 1.6;
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.5;
         }
         section {
-            margin-bottom: 30px;
-            border-bottom: 1px solid #ccc;
-            padding-bottom: 20px;
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+        }
+        h2 { margin-top: 0; }
+        .output {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
         }
         code {
-            background-color: #f4f4f4;
-            padding: 2px 5px;
-            border-radius: 3px;
-        }
-        .status {
-            margin-top: 10px;
-            font-style: italic;
-            color: #555;
-        }
-        button.replace-btn {
-            padding: 10px 20px;
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        button.replace-btn:hover {
-            background-color: #c82333;
+            background-color: #eee;
+            padding: 2px 4px;
+            border-radius: 4px;
         }
     </style>
 </head>
 <body>
 
-    <h1>Geolocation Element Demo</h1>
+    <h1>Geolocation Elements (Separate Outputs)</h1>
 
     <section>
         <h2>1. Manual Location Request</h2>
         <p>Click the element below to request the current location.</p>
-        
-        <geolocation id="geo1">
-            Find My Location
-        </geolocation>
-        
-        <div id="output1" class="status">Waiting for user interaction...</div>
+        <geolocation id="geo1"></geolocation>
+        <div id="output1" class="output">Waiting for user interaction...</div>
     </section>
 
     <section>
         <h2>2. Automatic Location Request</h2>
         <p>This element has the <code>autolocate</code> attribute and will request the location on page load.</p>
-        
-        <geolocation id="geo2" autolocate>
-            Find My Location (autolocate)
-        </geolocation>
-        
-        <div id="output2" class="status">Waiting for permission...</div>
+        <geolocation id="geo2" autolocate></geolocation>
+        <div id="output2" class="output">Waiting for permission...</div>
     </section>
 
     <section>
         <h2>3. Manual Precise Location Request</h2>
         <p>This element has the <code>accuracymode="precise"</code>, no autolocate.</p>
-        
-        <geolocation id="geo3" accuracymode="precise">
-            Find My Location (precise, no autolocate)
-        </geolocation>
-        
-        <div id="output3" class="status">Waiting for permission...</div>
+        <geolocation id="geo3" accuracymode="precise"></geolocation>
+        <div id="output3" class="output">Waiting for permission...</div>
     </section>
 
     <section>
         <h2>4. Created via setInnerHTML</h2>
         <p>This geolocation element is created dynamically in the main document by setting <code>innerHTML</code>.</p>
-        
-        <div id="container-innerhtml"></div>
-
-        <script>
-            const container = document.getElementById('container-innerhtml');
-            container.innerHTML = `
-                <geolocation id="geo4">
-                    Find My Location (innerHTML)
-                </geolocation>
-                <div id="output4" class="status">Waiting for injection...</div>
-            `;
-            
-            const geo4 = document.getElementById('geo4');
-            const output4 = document.getElementById('output4');
-            
-            if (geo4) {
-                output4.textContent = "Waiting for user interaction... (Injected successfully)";
-                geo4.onclick = () => {
-                    output4.textContent = "Clicked! Requesting location...";
-                };
-            }
-        </script>
+        <div id="container4"></div>
+        <div id="output4" class="output">Waiting for interaction...</div>
     </section>
 
     <section>
-        <h2>5. Replace Page with New Document</h2>
+        <h2>5. Created via AppendChild</h2>
+        <p>This geolocation element is created using <code>document.createElement</code> and added to the site by <code>appendChild</code>.</p>
+        <div id="container5"></div>
+        <div id="output5" class="output">Waiting for interaction...</div>
+    </section>
+
+    <section>
+        <h2>6. Replace Page with New Document</h2>
         <p>Clicking the button below will <strong>wipe this current page</strong> and replace it with a brand new document created via JavaScript (same tab).</p>
-        
-        <button id="replace-doc-btn" class="replace-btn">Replace Current Document</button>
-
-        <script>
-            document.getElementById('replace-doc-btn').onclick = () => {
-                // 1. Open the current document for writing (this wipes the previous content)
-                document.open();
-
-                // 2. Write a completely new HTML structure
-                document.write(`
-                    <!DOCTYPE html>
-                    <html lang="en">
-                    <head>
-                        <meta charset="UTF-8">
-                        <title>New Document Context</title>
-                        <style>
-                            body { 
-                                font-family: sans-serif; 
-                                padding: 40px; 
-                                text-align: center; 
-                                background-color: #eef;
-                            }
-                            .container {
-                                background: white;
-                                padding: 30px;
-                                border-radius: 8px;
-                                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-                                display: inline-block;
-                            }
-                            h1 { margin-top: 0; }
-                            .back-link { margin-top: 20px; display: block; }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="container">
-                            <h1>Replaced Document</h1>
-                            <p>This document was created dynamically using <code>document.write()</code>.</p>
-                            
-                            <geolocation id="geo-replaced">
-                                Find Location (Dynamic Doc)
-                            </geolocation>
-                            
-                            <div id="status-replaced" style="margin-top:15px; color: #555;">Waiting...</div>
-
-                            <a href="" class="back-link" onclick="location.reload(); return false;">&larr; Refresh to go back</a>
-                        </div>
-
-                        <script>
-                            // This script runs inside the NEW document structure
-                            const geoBtn = document.getElementById('geo-replaced');
-                            const statusDiv = document.getElementById('status-replaced');
-
-                            if (geoBtn) {
-                                geoBtn.onclick = () => {
-                                    statusDiv.innerText = "Clicked in the replaced document!";
-                                    console.log("Geolocation requested in dynamic document.");
-                                };
-                            }
-                        <\/script>
-                    </body>
-                    </html>
-                `);
-
-                // 3. Close the document stream to render the content
-                document.close();
-            };
-        </script>
+        <button id="replaceBtn">Replace Current Document</button>
     </section>
-    <section>
-        <h3>Demo Instructions</h3>
-        <p>In Chrome M143 or later, go to <code>chrome://flags#geolocation-element</code> and enable the experiment.</p>
-        <p>Alternatively in Chrome M121 or later, follow these instructions to enable experimental support:</p>
-        <ul>
-            <li>Shut down the browser process.</li>
-            <li>Restart the browser with this command line flag:
-                <pre><code>--enable-features=PermissionElement,GeolocationElement</code></pre>
-            </li>
-            <li>Ensure the flags actually took effect by verifying they appear on:
-                <pre><code>chrome://version</code></pre>
-            </li>
-        </ul>
-    </section>
+
+    <hr>
+
+    <h3>Demo Instructions</h3>
+    <p>In Chrome M143 or later, enable the flag at <code>chrome://flags#geolocation-element</code>.</p>
 
     <script>
-        // Basic logic for the static elements (1-3)
-        function setupLogger(geoId, outputId) {
-            const geoEl = document.getElementById(geoId);
-            const outEl = document.getElementById(outputId);
-            
-            if (geoEl) {
-                geoEl.onclick = () => {
-                    outEl.textContent = "Clicked. Requesting location...";
-                };
+        // --- Helper Function for Logging ---
+        function attachLogger(geoElement, outputId) {
+            const outputDiv = document.getElementById(outputId);
+            // Assuming standard events or similar behavior for the experimental element
+            if(geoElement) {
+                geoElement.addEventListener('click', () => {
+                     outputDiv.textContent = "Requesting location...";
+                });
+                // Note: Actual event names for the experimental <geolocation> element 
+                // might vary (e.g., 'geolocationchange', 'resolve').
             }
         }
 
-        setupLogger('geo1', 'output1');
-        setupLogger('geo2', 'output2');
-        setupLogger('geo3', 'output3');
+        // --- 1, 2, 3 are static in HTML, just attaching loggers ---
+        attachLogger(document.getElementById('geo1'), 'output1');
+        attachLogger(document.getElementById('geo2'), 'output2');
+        attachLogger(document.getElementById('geo3'), 'output3');
+
+        // --- 4. Logic for setInnerHTML ---
+        const container4 = document.getElementById('container4');
+        container4.innerHTML = '<geolocation id="geo4"></geolocation>';
+        attachLogger(document.getElementById('geo4'), 'output4');
+
+        // --- 5. Logic for AppendChild (NEW ADDITION) ---
+        const container5 = document.getElementById('container5');
+        const geo5 = document.createElement('geolocation');
+        geo5.id = 'geo5';
+        container5.appendChild(geo5);
+        attachLogger(geo5, 'output5');
+
+        // --- 6. Logic for Replace Page ---
+        document.getElementById('replaceBtn').addEventListener('click', () => {
+            const newContent = `
+                <!DOCTYPE html>
+                <html>
+                <head><title>Replaced Document</title></head>
+                <body>
+                    <h1>Document Replaced</h1>
+                    <p>This is a fresh document.</p>
+                    <geolocation></geolocation>
+                </body>
+                </html>
+            `;
+            document.open();
+            document.write(newContent);
+            document.close();
+        });
     </script>
+
 </body>
 </html>
