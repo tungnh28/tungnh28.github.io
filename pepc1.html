@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=0.6" />
+    <meta http-equiv="origin-trial" content="AoT9sxHnrXGn+/dX2yEn71K0yoQ4jjs/lE3cFwYpt0qpFC/ZCCTN1dw0Cf1w0SN4HcBqJaTiwZy+A19IouqxQwAAAABveyJvcmlnaW4iOiJodHRwczovL3R1bmduaDI4LmdpdGh1Yi5pbzo0NDMiLCJmZWF0dXJlIjoiVXNlck1lZGlhRWxlbWVudCIsImV4cGlyeSI6MTc4Mzk4NzIwMCwiaXNTdWJkb21haW4iOnRydWV9" />
+    <title>Permission element</title>
+  </head>
+  <body>  
+    <div class="before"></div>
+    <div class="content">
+      <permission id="geolocation" type="geolocation" tabindex=0>
+        No geolocation
+      </permission>
+      <permission id="camera" type="camera" tabindex=0
+          ondismiss="console.log('dismissed');"
+          onresolve="console.log('resloved');"
+          onvalidationstatuschange="console.log('valid changed');">
+        No camera
+      </permission>
+      <permission id="microphone" type="microphone" tabindex=0>
+        No microphone
+      </permission>
+      <permission id="camera-microphone" type="camera microphone" tabindex=0>
+        No camera & microphone
+      </permission>  
+    </div>
+    <div class="github-fork-ribbon-wrapper right">
+      <div class="github-fork-ribbon">
+        <a href="https://github.com/chromium/permission.site">On GitHub</a>
+      </div>
+    </div>
+    <link rel="stylesheet" href="third_party/github.css" />
+  </body>
+</html>
