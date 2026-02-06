@@ -5,9 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=0.6" />
     <meta http-equiv="origin-trial" content="AoT9sxHnrXGn+/dX2yEn71K0yoQ4jjs/lE3cFwYpt0qpFC/ZCCTN1dw0Cf1w0SN4HcBqJaTiwZy+A19IouqxQwAAAABveyJvcmlnaW4iOiJodHRwczovL3R1bmduaDI4LmdpdGh1Yi5pbzo0NDMiLCJmZWF0dXJlIjoiVXNlck1lZGlhRWxlbWVudCIsImV4cGlyeSI6MTc4Mzk4NzIwMCwiaXNTdWJkb21haW4iOnRydWV9" />
     <title>Permission element</title>
+    <style>
+      /* Styles to organize the new enumeration section */
+      .debug-section {
+        margin-top: 30px;
+        padding: 20px;
+        border-top: 2px dashed #ccc;
+        background: #fafafa;
+      }
+      #enum-button {
+        padding: 12px 24px;
+        font-size: 16px;
+        cursor: pointer;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+      }
+      #enum-button:hover {
+        background-color: #45a049;
+      }
+      #device-list {
+        margin-top: 15px;
+        font-family: monospace;
+        background: #222;
+        color: #00ff00;
+        padding: 15px;
+        border-radius: 5px;
+        white-space: pre-wrap;
+        display: none;
+      }
+    </style>
   </head>
-  <body>  
-    <div class="before"></div>
+  <body>
+      <div class="before"></div>
     <div class="content">
       <permission id="geolocation" type="geolocation" tabindex=0>
         No geolocation
@@ -23,8 +54,9 @@
       </permission>
       <permission id="camera-microphone" type="camera microphone" tabindex=0>
         No camera & microphone
-      </permission>  
-      <usermedia id="camera" type="camera" tabindex=0
+      </permission>
+
+        <usermedia id="camera" type="camera" tabindex=0
           ondismiss="console.log('dismissed');"
           onresolve="console.log('resloved');"
           onvalidationstatuschange="console.log('valid changed');">
@@ -35,13 +67,50 @@
       </usermedia>
       <usermedia id="camera-microphone" type="camera microphone" tabindex=0>
         No camera & microphone Usermedia
-      </usermedia>  
-    </div>
+      </usermedia>
+      
+      <div class="debug-section">
+        <h3>Device Inspection</h3>
+        <button id="enum-button">Call enumerateDevices()</button>
+        <div id="device-list"></div>
+      </div>
+
+      </div>
     <div class="github-fork-ribbon-wrapper right">
       <div class="github-fork-ribbon">
         <a href="https://github.com/chromium/permission.site">On GitHub</a>
       </div>
     </div>
     <link rel="stylesheet" href="third_party/github.css" />
+
+    <script>
+      const btn = document.getElementById('enum-button');
+      const display = document.getElementById('device-list');
+
+      btn.addEventListener('click', async () => {
+        try {
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          display.style.display = 'block';
+          
+          if (devices.length === 0) {
+            display.textContent = "No devices detected.";
+            return;
+          }
+
+          const formattedList = devices.map((d, i) => {
+            const label = d.label || "--- LABEL MASKED (Grant PEPC permission above first) ---";
+            return `[${i+1}] ${d.kind.toUpperCase()}\n    Label: ${label}\n    ID: ${d.deviceId.slice(0, 15)}...`;
+          }).join('\n\n');
+
+          display.textContent = "Detected Media Devices:\n\n" + formattedList;
+          
+          // Also log full objects to console for deep inspection
+          console.log("Full Device Objects:", devices);
+        } catch (err) {
+          display.style.display = 'block';
+          display.textContent = "Error: " + err.name + ": " + err.message;
+        }
+      });
+    </script>
   </body>
 </html>
