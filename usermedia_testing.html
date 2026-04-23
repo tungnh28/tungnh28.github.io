@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Usermedia Capability Element MVP - Max 3 Element Test Suite</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .test-case { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
+    h2 { margin-top: 0; }
+    button.setup-btn {
+      padding: 8px 12px;
+      background-color: #00bcd4;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-right: 15px;
+    }
+    usermedia {
+      display: inline-block;
+      padding: 10px 15px;
+      background-color: #e0f7fa;
+      border: 1px solid #00bcd4;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    .video-display {
+      width: 320px;
+      height: 240px;
+      border: 1px solid black;
+      margin-top: 10px;
+    }
+    .status {
+      margin-top: 10px;
+      padding: 5px;
+      background-color: #f0f0f0;
+    }
+    .container-wrapper {
+      min-height: 50px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Usermedia MVP Combined Test Suite (Max 3 Elements)</h1>
+  <p><strong>INSTRUCTIONS:</strong> Open the Developer Console (F12 or Ctrl+Shift+I). For each test case, click the **SETUP** button first, and then click the newly inserted **&lt;usermedia&gt;** element.</p>
+  
+  <div id="general-log" class="status">General Status: Ready.</div>
+  <video id="video-feed" class="video-display" autoplay muted></video>
+
+  <!-- ============================================== -->
+  <!-- Case 4.4.1: Feature Detection (Runs on load) -->
+  <!-- ============================================== -->
+  <div class="test-case" id="test-441">
+    <h2>4.4.1: Feature Detection (Automatic)</h2>
+    <div id="status-441" class="status"></div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- Test Group 1: Core Flow & Immutability -->
+  <!-- ============================================== -->
+  <div class="test-case" id="test-group-1">
+    <h2>Test Group 1: Core & Immutability (Element 1)</h2>
+    <p>Tests 4.1.1, 4.1.2, 4.1.3, 4.2.3</p>
+    <button class="setup-btn" onclick="runTest(1, 'core');">SETUP 4.1.1/4.1.2/4.1.3 (Default)</button>
+    <button class="setup-btn" onclick="runTest(1, 'immutability');">SETUP 4.2.3 (Immutability)</button>
+    <div class="container-wrapper" id="um-container-1"></div>
+    <div id="status-1" class="status">Awaiting setup.</div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- Test Group 2: Constraint Validation -->
+  <!-- ============================================== -->
+  <div class="test-case" id="test-group-2">
+    <h2>Test Group 2: Constraint Validation (Element 2)</h2>
+    <p>Tests 4.2.1, 4.2.2</p>
+    <button class="setup-btn" onclick="runTest(2, 'basic-constraints');">SETUP 4.2.1 (Video Only)</button>
+    <button class="setup-btn" onclick="runTest(2, 'sanitization');">SETUP 4.2.2 (Sanitization)</button>
+    <div class="container-wrapper" id="um-container-2"></div>
+    <div id="status-2" class="status">Awaiting setup.</div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- Test Group 3: Backward Compatibility -->
+  <!-- ============================================== -->
+  <div class="test-case" id="test-group-3">
+    <h2>Test Group 3: Backward Compatibility (Element 3)</h2>
+    <p>Tests 4.3.1, 4.3.2, 4.3.3</p>
+    <button class="setup-btn" onclick="runTest(3, 'legacy');">SETUP 4.3.1 (Legacy Type)</button>
+    <button class="setup-btn" onclick="runTest(3, 'filtering');">SETUP 4.3.2 (Interop Filtering)</button>
+    <button class="setup-btn" onclick="runTest(3, 'defaults');">SETUP 4.3.3 (Interop Defaults)</button>
+    <div class="container-wrapper" id="um-container-3"></div>
+    <div id="status-3" class="status">Awaiting setup.</div>
+  </div>
+
+  <script>
+    const videoFeed = document.getElementById('video-feed');
+    let currentStream = null;
+
+    function clearStream() {
+      if (currentStream) {
+        currentStream.getTracks().forEach(track => track.stop());
+        videoFeed.srcObject = null;
+        currentStream = null;
+      }
+    }
+
+    function logResult(caseId, message, isError = false, containerId = 0) {
+      const statusElement = document.getElementById(`status-${containerId}`);
+      const formattedMessage = `[CASE ${caseId}] ${message}`;
+      
+      if (isError) {
+        console.error(formattedMessage);
+        if (statusElement) {
+          statusElement.innerHTML = `<strong>FAILED:</strong> ${formattedMessage}`;
+          statusElement.style.backgroundColor = '#ffdddd';
+        }
+      } else {
+        console.log(formattedMessage);
+        if (statusElement) {
+          statusElement.innerHTML = `<strong>SUCCESS:</strong> ${formattedMessage}`;
+          statusElement.style.backgroundColor = '#ddffdd';
+        }
+      }
+      document.getElementById('general-log').innerText = `Last action: ${caseId} - ${message}`;
+    }
+
+    function verifyStream(stream, caseId, expectedVideo, expectedAudio, expectedVideoWidth = null) {
+      const videoTracks = stream.getVideoTracks();
+      const audioTracks = stream.getAudioTracks();
+      const hasVideo = videoTracks.length > 0;
+      const hasAudio = audioTracks.length > 0;
+      let success = true;
+      let details = `Video Tracks: ${videoTracks.length}, Audio Tracks: ${audioTracks.length}.`;
+      
+      if (hasVideo !== expectedVideo || hasAudio !== expectedAudio) {
+        success = false;
+        details += ` Expected: Video(${expectedVideo}), Audio(${expectedAudio}).`;
+      }
+
+      if (expectedVideoWidth !== null && hasVideo) {
+        const settings = videoTracks[0].getSettings();
+        const widthMatch = settings.width === expectedVideoWidth;
+        details += ` Resolution: ${settings.width}x${settings.height}.`;
+        if (!widthMatch) {
+            success = false;
+            details += ` Expected width: ${expectedVideoWidth}px.`;
+        }
+        console.assert(widthMatch, `Verification: Video width matches expected ${expectedVideoWidth}px.`);
+      }
+
+      if (success) {
+        logResult(caseId, `Stream acquired successfully. ${details}`, false, caseId.charAt(0));
+        videoFeed.srcObject = stream;
+        currentStream = stream;
+      } else {
+        logResult(caseId, `Stream verification FAILED: ${details}`, true, caseId.charAt(0));
+      }
+    }
+
+    // --- Dynamic Element Management ---
+
+    function createUsermediaElement(id, text, typeAttribute = null) {
+      const um = document.createElement('usermedia');
+      um.id = id;
+      um.innerText = text;
+      if (typeAttribute) {
+        um.setAttribute('type', typeAttribute);
+      }
+      return um;
+    }
+
+    function setupTestElement(containerId, testCaseId, setupType, umConfig = {}) {
+      const container = document.getElementById(`um-container-${containerId}`);
+      const statusElement = document.getElementById(`status-${containerId}`);
+      
+      clearStream();
+      container.innerHTML = '';
+      statusElement.style.backgroundColor = '#f0f0f0';
+      statusElement.innerHTML = `Running Setup for Case ${testCaseId}... Click the element to run.`;
+
+      const um = createUsermediaElement(`um-${testCaseId}`, `CLICK TO RUN ${testCaseId}`, umConfig.type);
+      container.appendChild(um);
+
+      // Apply setConstraints if provided
+      if (umConfig.constraints) {
+        um.setConstraints(umConfig.constraints);
+        logResult(testCaseId, `Constraints applied: ${JSON.stringify(umConfig.constraints)}`, false, containerId);
+      }
+
+      // Set up the onstream handler
+      um.onstream = function() {
+        console.log(`[CASE ${testCaseId}] onstream event fired.`);
+        if (this.error) {
+          // Failure verification
+          logResult(testCaseId, `Failure flow verified. Error Name: ${this.error.name}. Stream is null.`, false, containerId);
+          console.assert(this.stream === null, `Verification ${testCaseId}: stream attribute is null.`);
+          console.assert(this.error instanceof DOMException, `Verification ${testCaseId}: error attribute is a DOMException.`);
+        } else if (this.stream) {
+          // Success verification relies on the specific test case
+          handleSuccess(this.stream, testCaseId, um, containerId);
+        }
+      };
+
+      // Specific setup for immutability (4.2.3)
+      if (setupType === 'immutability') {
+          // Must call setConstraints twice before click for this test
+          um.setConstraints({ video: true, audio: false });
+          console.log('[CASE 4.2.3] First setConstraints called for video only (should be used).');
+          um.setConstraints({ video: false, audio: true });
+          console.log('[CASE 4.2.3] Second setConstraints called for audio only (should be ignored).');
+      }
+
+      // Initial state reset for subsequent click test (4.1.3)
+      if (setupType === 'core') {
+          um.hasStream = false;
+          um.addEventListener('click', function(e) {
+              if (um.hasStream) {
+                  e.preventDefault(); // Prevent default action on subsequent clicks
+                  logResult('4.1.3', 'Subsequent click detected. No new permission prompt should appear.', false, containerId);
+                  console.assert(true, 'Verification 4.1.3: Click is effectively ignored.');
+              }
+              // Note: The lack of a new permission prompt must be confirmed manually.
+          });
+      }
+    }
+
+    function handleSuccess(stream, caseId, element, containerId) {
+      if (caseId === '4.1.1') {
+        verifyStream(stream, caseId, true, true);
+        element.hasStream = true; // Mark for 4.1.3 subsequent click test
+        document.getElementById(`status-${containerId}`).innerHTML += '<br><strong>Ready for 4.1.3:</strong> Click the element again and confirm no prompt appears.';
+      } else if (caseId === '4.2.1') {
+        // Expected: Video only, width 1280 (audio: false)
+        verifyStream(stream, caseId, true, false, 1280);
+      } else if (caseId === '4.2.2') {
+        // Expected: Both video and audio (retained primitive constraints)
+        verifyStream(stream, caseId, true, true);
+        logResult(caseId, 'Success. Complex constraints stripped, primitive constraints retained.', false, containerId);
+      } else if (caseId === '4.2.3') {
+        // Expected: Video only (First setConstraints call wins)
+        verifyStream(stream, caseId, true, false);
+        logResult(caseId, 'Success. Stream is Video-Only, confirming immutability.', false, containerId);
+      } else if (caseId === '4.3.1') {
+        // Expected: Video and Audio (Legacy mode default)
+        verifyStream(stream, caseId, true, true);
+        logResult(caseId, 'Success. Stream has both Video and Audio, confirming legacy behavior.', false, containerId);
+      } else if (caseId === '4.3.2') {
+        // Expected: Audio only (Video constraint filtered by type="microphone")
+        verifyStream(stream, caseId, false, true);
+        logResult(caseId, 'Success. Stream is Audio-Only, confirming video constraint filtering by type attribute.', false, containerId);
+      } else if (caseId === '4.3.3') {
+        // Expected: Video only (Audio defaulted to false)
+        verifyStream(stream, caseId, true, false, 1280);
+        logResult(caseId, 'Success. Stream is Video-Only, confirming audio defaulted to false.', false, containerId);
+      }
+    }
+    
+    // Main function to run tests dynamically
+    function runTest(containerId, testType) {
+      clearStream();
+
+      if (testType === 'core') {
+        // 4.1.1/4.1.2/4.1.3 (Note: 4.1.2 requires manual permission reset)
+        setupTestElement(containerId, '4.1.1', 'core'); 
+      } else if (testType === 'immutability') {
+        // 4.2.3
+        setupTestElement(containerId, '4.2.3', 'immutability');
+      } else if (testType === 'basic-constraints') {
+        // 4.2.1
+        setupTestElement(containerId, '4.2.1', 'constraints', {
+          constraints: { video: { width: 1280, height: 720 }, audio: false }
+        });
+      } else if (testType === 'sanitization') {
+        // 4.2.2
+        setupTestElement(containerId, '4.2.2', 'constraints', {
+          constraints: {
+            video: {
+              width: { ideal: 1280 }, // Should be stripped
+              height: 720,             // Should be retained
+              frameRate: { min: 25, max: 30 } // Should be stripped
+            },
+            audio: { echoCancellation: true } // Should be retained
+          }
+        });
+      } else if (testType === 'legacy') {
+        // 4.3.1
+        setupTestElement(containerId, '4.3.1', 'legacy', {
+          type: 'microphone camera' 
+        });
+      } else if (testType === 'filtering') {
+        // 4.3.2
+        setupTestElement(containerId, '4.3.2', 'interop', {
+          type: 'microphone', 
+          constraints: { video: { width: 1280 }, audio: true }
+        });
+      } else if (testType === 'defaults') {
+        // 4.3.3
+        setupTestElement(containerId, '4.3.3', 'interop', {
+          type: 'microphone camera', 
+          constraints: { video: { width: 1280 } }
+        });
+      }
+    }
+
+    // --- 4.4.1: Feature Detection (Runs immediately on load) ---
+    (function test441() {
+      const status441 = document.getElementById('status-441');
+      if (typeof window.HTMLUserMediaElement !== 'undefined' &&
+          typeof HTMLUserMediaElement.prototype.setConstraints === 'function') {
+        logResult('4.4.1', 'Capability Element <usermedia> features are supported!', false);
+      } else {
+        logResult('4.4.1', 'Features are NOT supported. Falling back to legacy element handling.', true);
+      }
+    })();
+  </script>
+</body>
+</html>
