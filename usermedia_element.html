@@ -62,6 +62,34 @@
         </span>
       </div>
 
+      <h2>3. Progressive Enhancement &amp; Fallback Pattern</h2>
+      <p>
+        In browsers that do not support capability elements, tags like <code>&lt;usermedia&gt;</code> are treated as unknown HTML elements and render their child elements. The inner button falls back to standard <code>getUserMedia()</code>.
+      </p>
+      <div>
+        <span class="permission-element-box">
+          <usermedia id="um-fallback" tabindex="0" onstream="handleStream && handleStream(event)">
+            <button class="fallback-btn" onclick="handleFallbackGetUserMedia({video: true, audio: true}, 'Usermedia (Fallback)')">
+              📹🎙️ Enable Camera &amp; Mic (Fallback)
+            </button>
+          </usermedia>
+        </span>
+        <span class="permission-element-box">
+          <camera id="cam-fallback" tabindex="0" onstream="handleStream && handleStream(event)">
+            <button class="fallback-btn" onclick="handleFallbackGetUserMedia({video: true, audio: false}, 'Camera (Fallback)')">
+              📹 Enable Camera (Fallback)
+            </button>
+          </camera>
+        </span>
+        <span class="permission-element-box">
+          <microphone id="mic-fallback" tabindex="0" onstream="handleStream && handleStream(event)">
+            <button class="fallback-btn" onclick="handleFallbackGetUserMedia({audio: true, video: false}, 'Microphone (Fallback)')">
+              🎙️ Enable Microphone (Fallback)
+            </button>
+          </microphone>
+        </span>
+      </div>
+
       <div class="media-display-container">
         <h3>Live Preview</h3>
         <video id="video-feed" class="media-video-feed" autoplay muted playsinline></video>

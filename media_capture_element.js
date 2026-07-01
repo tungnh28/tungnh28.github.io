@@ -96,6 +96,31 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // --- Fallback getUserMedia Handler ---
+  window.handleFallbackGetUserMedia = function(constraints, testName) {
+    log(`[Fallback API] Triggering getUserMedia for ${testName}...`, "info");
+    navigator.mediaDevices
+      .getUserMedia(constraints)
+      .then((stream) => {
+        clearCurrentStream();
+        currentStream = stream;
+        videoPreview.srcObject = currentStream;
+        const vTracks = currentStream.getVideoTracks().length;
+        const aTracks = currentStream.getAudioTracks().length;
+        log(
+          `[Fallback API] ${testName} Success! Stream acquired (Video tracks: ${vTracks}, Audio tracks: ${aTracks})`,
+          "success"
+        );
+        visualizeAudio(currentStream);
+      })
+      .catch((err) => {
+        log(
+          `[Fallback API] ${testName} getUserMedia Failed: ${err.name} - ${err.message}`,
+          "error"
+        );
+      });
+  };
+
   // --- Legacy Setup (behaving like PEPC) ---
   function setupLegacyElement(el, testName, constraints) {
     if (!el) return;
@@ -225,13 +250,20 @@ window.addEventListener("DOMContentLoaded", () => {
     toggleOtBtn.addEventListener("click", toggleOriginTrial);
   }
 
+  // Feature detection
+  if ("HTMLUserMediaElement" in window) {
+    log("Feature Detection: 'HTMLUserMediaElement' IS supported in window.", "success");
+  } else {
+    log("Feature Detection: 'HTMLUserMediaElement' is NOT supported in window. Fallback child buttons will activate for unsupported browsers.", "info");
+  }
+
   // Initialize on load based on stored session state
   updateModeUI();
 
   logOutput.innerHTML = "";
   log("System ready. Click elements above to test.", "info");
 
-  // Setup Media Capture elements
+  // Setup Media Capture elements (Section 1)
   setupMediaCaptureElement(
     document.getElementById("um-both"),
     "Usermedia (Camera & Mic)",
@@ -246,7 +278,7 @@ window.addEventListener("DOMContentLoaded", () => {
     "Microphone Only"
   );
 
-  // Setup Legacy elements
+  // Setup Legacy elements (Section 2)
   setupLegacyElement(
     document.getElementById("um-legacy-audio"),
     "Legacy Usermedia (Microphone)",
@@ -261,5 +293,20 @@ window.addEventListener("DOMContentLoaded", () => {
     document.getElementById("um-legacy-both"),
     "Legacy Usermedia (Camera & Mic)",
     { audio: {}, video: {} }
+  );
+
+  // Setup Progressive Enhancement elements (Section 3)
+  setupMediaCaptureElement(
+    document.getElementById("um-fallback"),
+    "Usermedia (Fallback Element)",
+    { audio: {}, video: {} }
+  );
+  setupMediaCaptureElement(
+    document.getElementById("cam-fallback"),
+    "Camera (Fallback Element)"
+  );
+  setupMediaCaptureElement(
+    document.getElementById("mic-fallback"),
+    "Microphone (Fallback Element)"
   );
 });
