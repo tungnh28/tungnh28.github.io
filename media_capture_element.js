@@ -97,8 +97,8 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- Fallback getUserMedia Handler ---
-  window.handleFallbackGetUserMedia = function(constraints, testName) {
-    log(`[Fallback API] Triggering getUserMedia for ${testName}...`, "info");
+  function handleFallbackGetUserMedia(constraints, testName) {
+    log(`[Fallback API] Triggering getUserMedia() for ${testName}...`, "info");
     navigator.mediaDevices
       .getUserMedia(constraints)
       .then((stream) => {
@@ -119,7 +119,7 @@ window.addEventListener("DOMContentLoaded", () => {
           "error"
         );
       });
-  };
+  }
 
   // --- Legacy Setup (behaving like PEPC) ---
   function setupLegacyElement(el, testName, constraints) {
@@ -163,7 +163,7 @@ window.addEventListener("DOMContentLoaded", () => {
     el.addEventListener("promptdismiss", handlePermissionChange);
   }
 
-  // --- Media Capture Setup (onstream, onerror, oncancel) ---
+  // --- Media Capture Setup (onstream, onerror, oncancel via addEventListener) ---
   function setupMediaCaptureElement(el, testName, constraints) {
     if (!el) return;
 
@@ -206,15 +206,28 @@ window.addEventListener("DOMContentLoaded", () => {
       );
     };
 
-    // Register via properties (onstream, onerror, oncancel)
-    el.onstream = () => handleSuccess("Property:onstream");
-    el.onerror = () => handleFailure("Property:onerror");
-    el.oncancel = () => handleCancel("Property:oncancel");
-
-    // Register via event listeners
+    // Register via non-inline event listeners
     el.addEventListener("stream", () => handleSuccess("Listener:stream"));
     el.addEventListener("error", () => handleFailure("Listener:error"));
     el.addEventListener("cancel", () => handleCancel("Listener:cancel"));
+  }
+
+  // --- Section 3: Progressive Enhancement & Fallback Pattern Setup ---
+  function setupFallbackElement(elId, buttonId, testName, constraints) {
+    const el = document.getElementById(elId);
+    const button = document.getElementById(buttonId);
+
+    if (!el) return;
+
+    if ("HTMLUserMediaElement" in window) {
+      // Modern Capability Element is supported: bind listeners to the element
+      setupMediaCaptureElement(el, testName, constraints);
+    } else if (button) {
+      // Capability Element is missing/unsupported: attach click listener to fallback button
+      button.addEventListener("click", () => {
+        handleFallbackGetUserMedia(constraints, testName);
+      });
+    }
   }
 
   const OT_TOKEN =
@@ -250,11 +263,11 @@ window.addEventListener("DOMContentLoaded", () => {
     toggleOtBtn.addEventListener("click", toggleOriginTrial);
   }
 
-  // Feature detection
+  // Feature detection check
   if ("HTMLUserMediaElement" in window) {
     log("Feature Detection: 'HTMLUserMediaElement' IS supported in window.", "success");
   } else {
-    log("Feature Detection: 'HTMLUserMediaElement' is NOT supported in window. Fallback child buttons will activate for unsupported browsers.", "info");
+    log("Feature Detection: 'HTMLUserMediaElement' is NOT supported in window. Fallback listeners attached to inner buttons.", "info");
   }
 
   // Initialize on load based on stored session state
@@ -295,18 +308,23 @@ window.addEventListener("DOMContentLoaded", () => {
     { audio: {}, video: {} }
   );
 
-  // Setup Progressive Enhancement elements (Section 3)
-  setupMediaCaptureElement(
-    document.getElementById("um-fallback"),
-    "Usermedia (Fallback Element)",
+  // Setup Progressive Enhancement Fallback elements (Section 3)
+  setupFallbackElement(
+    "um-fallback",
+    "btn-um-fallback",
+    "Usermedia (Fallback)",
     { audio: {}, video: {} }
   );
-  setupMediaCaptureElement(
-    document.getElementById("cam-fallback"),
-    "Camera (Fallback Element)"
+  setupFallbackElement(
+    "cam-fallback",
+    "btn-cam-fallback",
+    "Camera (Fallback)",
+    { video: {} }
   );
-  setupMediaCaptureElement(
-    document.getElementById("mic-fallback"),
-    "Microphone (Fallback Element)"
+  setupFallbackElement(
+    "mic-fallback",
+    "btn-mic-fallback",
+    "Microphone (Fallback)",
+    { audio: {} }
   );
 });

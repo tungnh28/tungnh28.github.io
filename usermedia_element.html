@@ -64,26 +64,26 @@
 
       <h2>3. Progressive Enhancement &amp; Fallback Pattern</h2>
       <p>
-        In browsers that do not support capability elements, tags like <code>&lt;usermedia&gt;</code> are treated as unknown HTML elements and render their child elements. The inner button falls back to standard <code>getUserMedia()</code>.
+        In browsers that do not support capability elements, tags like <code>&lt;usermedia&gt;</code> are treated as unknown HTML elements and render their child elements. Clean non-inline JavaScript listeners handle both modern element events and legacy <code>getUserMedia()</code> fallback clicks.
       </p>
       <div>
         <span class="permission-element-box">
-          <usermedia id="um-fallback" tabindex="0" onstream="handleStream && handleStream(event)">
-            <button class="fallback-btn" onclick="handleFallbackGetUserMedia({video: true, audio: true}, 'Usermedia (Fallback)')">
+          <usermedia id="um-fallback" tabindex="0">
+            <button id="btn-um-fallback" class="fallback-btn">
               📹🎙️ Enable Camera &amp; Mic (Fallback)
             </button>
           </usermedia>
         </span>
         <span class="permission-element-box">
-          <camera id="cam-fallback" tabindex="0" onstream="handleStream && handleStream(event)">
-            <button class="fallback-btn" onclick="handleFallbackGetUserMedia({video: true, audio: false}, 'Camera (Fallback)')">
+          <camera id="cam-fallback" tabindex="0">
+            <button id="btn-cam-fallback" class="fallback-btn">
               📹 Enable Camera (Fallback)
             </button>
           </camera>
         </span>
         <span class="permission-element-box">
-          <microphone id="mic-fallback" tabindex="0" onstream="handleStream && handleStream(event)">
-            <button class="fallback-btn" onclick="handleFallbackGetUserMedia({audio: true, video: false}, 'Microphone (Fallback)')">
+          <microphone id="mic-fallback" tabindex="0">
+            <button id="btn-mic-fallback" class="fallback-btn">
               🎙️ Enable Microphone (Fallback)
             </button>
           </microphone>

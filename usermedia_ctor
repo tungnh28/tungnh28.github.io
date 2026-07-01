@@ -139,21 +139,21 @@
     <div class="case-container">
         <h2>Case 6: Progressive Enhancement &amp; Fallback Pattern</h2>
         <p>
-            In browsers without native support for capability elements, tags like <code>&lt;usermedia&gt;</code> degrade to <code>HTMLUnknownElement</code> and render their child elements. Inner buttons trigger legacy <code>getUserMedia()</code>.
+            In browsers without native support for capability elements, tags like <code>&lt;usermedia&gt;</code> degrade to <code>HTMLUnknownElement</code> and render their child elements. Inner buttons trigger legacy <code>getUserMedia()</code> using non-inline JS event listeners.
         </p>
         <div id="container-fallback" class="element-box">
             <usermedia id="ctor-um-fallback">
-                <button class="fallback-btn" onclick="log('log-fallback', 'Child fallback button clicked inside <usermedia>: Requesting legacy getUserMedia()')">
+                <button id="ctor-btn-um-fallback" class="fallback-btn">
                     📹🎙️ Fallback Button (&lt;usermedia&gt;)
                 </button>
             </usermedia>
             <camera id="ctor-cam-fallback">
-                <button class="fallback-btn" onclick="log('log-fallback', 'Child fallback button clicked inside <camera>: Requesting legacy getUserMedia()')">
+                <button id="ctor-btn-cam-fallback" class="fallback-btn">
                     📹 Fallback Button (&lt;camera&gt;)
                 </button>
             </camera>
             <microphone id="ctor-mic-fallback">
-                <button class="fallback-btn" onclick="log('log-fallback', 'Child fallback button clicked inside <microphone>: Requesting legacy getUserMedia()')">
+                <button id="ctor-btn-mic-fallback" class="fallback-btn">
                     🎙️ Fallback Button (&lt;microphone&gt;)
                 </button>
             </microphone>
@@ -359,14 +359,50 @@
             document.close();
         });
 
-        // --- CASE 6: FEATURE DETECTION & FALLBACK CHECK ---
+        // --- CASE 6: FEATURE DETECTION & NON-INLINE FALLBACK SETUP ---
+        const fallbackItems = [
+            { elId: 'ctor-um-fallback', btnId: 'ctor-btn-um-fallback', name: '<usermedia>', constraints: { video: true, audio: true } },
+            { elId: 'ctor-cam-fallback', btnId: 'ctor-btn-cam-fallback', name: '<camera>', constraints: { video: true } },
+            { elId: 'ctor-mic-fallback', btnId: 'ctor-btn-mic-fallback', name: '<microphone>', constraints: { audio: true } }
+        ];
+
+        if ('HTMLUserMediaElement' in window) {
+            fallbackItems.forEach(item => {
+                const el = document.getElementById(item.elId);
+                if (el) {
+                    el.addEventListener('stream', () => {
+                        log('log-fallback', `Native 'stream' event fired on ${item.name}`);
+                    });
+                    el.addEventListener('error', () => {
+                        log('log-fallback', `Native 'error' event fired on ${item.name}: ${el.error?.name}`);
+                    });
+                }
+            });
+        } else {
+            fallbackItems.forEach(item => {
+                const btn = document.getElementById(item.btnId);
+                if (btn) {
+                    btn.addEventListener('click', () => {
+                        log('log-fallback', `Fallback button click event listener fired inside ${item.name}: Requesting getUserMedia(${JSON.stringify(item.constraints)})`);
+                        navigator.mediaDevices.getUserMedia(item.constraints)
+                            .then(stream => {
+                                log('log-fallback', `Fallback getUserMedia() SUCCESS for ${item.name}! Tracks acquired.`);
+                            })
+                            .catch(err => {
+                                log('log-fallback', `Fallback getUserMedia() FAILED for ${item.name}: ${err.message}`);
+                            });
+                    });
+                }
+            });
+        }
+
         document.getElementById('btn-check-support').addEventListener('click', () => {
             clearLog('log-fallback');
             log('log-fallback', 'Running feature detection check:');
             if ('HTMLUserMediaElement' in window) {
-                log('log-fallback', 'Result: HTMLUserMediaElement IS supported in window!');
+                log('log-fallback', 'Result: HTMLUserMediaElement IS supported in window! Event listeners attached to capability elements.');
             } else {
-                log('log-fallback', 'Result: HTMLUserMediaElement is NOT supported. Custom fallback buttons inside <usermedia>, <camera>, <microphone> render for unsupported browsers.');
+                log('log-fallback', 'Result: HTMLUserMediaElement is NOT supported. Non-inline click listeners attached to inner fallback buttons.');
             }
         });
     </script>
