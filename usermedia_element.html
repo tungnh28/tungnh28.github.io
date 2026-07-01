@@ -1,157 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Basic Usermedia MVP</title>
-  <!-- Origin Trial Token for UserMediaElement -->
-  <meta http-equiv="origin-trial" content="AoT9sxHnrXGn+/dX2yEn71K0yoQ4jjs/lE3cFwYpt0qpFC/ZCCTN1dw0Cf1w0SN4HcBqJaTiwZy+A19IouqxQwAAAABveyJvcmlnaW4iOiJodHRwczovL3R1bmduaDI4LmdpdGh1Yi5pbzo0NDMiLCJmZWF0dXJlIjoiVXNlck1lZGlhRWxlbWVudCIsImV4cGlyeSI6MTc4Mzk4NzIwMCwiaXNTdWJkb21haW4iOnRydWV9">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      max-width: 800px;
-    }
-    h1 {
-      font-size: 1.5rem;
-    }
-    .controls {
-      margin-bottom: 20px;
-      display: flex;
-      gap: 15px;
-    }
-    /* Styling the <usermedia> tags to look and act like interactive buttons */
-    usermedia {
-      display: inline-block;
-      padding: 10px 20px;
-      background-color: #00bcd4;
-      color: white;
-      font-weight: bold;
-      border: 1px solid #0097a7;
-      border-radius: 5px;
-      cursor: pointer;
-      user-select: none;
-      transition: background-color 0.2s;
-    }
-    usermedia:hover {
-      background-color: #0097a7;
-    }
-    .video-display {
-      width: 100%;
-      max-width: 640px;
-      height: 360px;
-      background-color: #000;
-      border: 2px solid #ccc;
-      border-radius: 5px;
-      margin-bottom: 20px;
-    }
-    .log-container {
-      background-color: #f9f9f9;
-      border: 1px solid #ccc;
-      padding: 15px;
-      border-radius: 5px;
-      height: 200px;
-      overflow-y: auto;
-      font-family: monospace;
-    }
-    .log-entry { margin: 5px 0; }
-    .success { color: green; }
-    .error { color: red; }
-    .info { color: blue; }
-  </style>
-</head>
-<body>
-
-  <h1>Usermedia Element</h1>
-  <p>Click the buttons below to request media. Ensure the Developer Console is open if you wish to see raw objects.</p>
-
-  <div class="controls">
-    <usermedia id="btn-audio">🎙️ Audio Only</usermedia>
-    <usermedia id="btn-video">📹 Video Only</usermedia>
-    <usermedia id="btn-both">🎥 Audio & Video</usermedia>
-  </div>
-
-  <video id="video-feed" class="video-display" autoplay muted playsinline></video>
-
-  <div class="log-container" id="log-output">
-    <div class="log-entry info">System: Ready. Waiting for interaction.</div>
-  </div>
-
-  <script>
-    const videoFeed = document.getElementById('video-feed');
-    const logOutput = document.getElementById('log-output');
-    let currentStream = null;
-
-    // --- Utility Functions ---
-
-    function log(message, type = 'info') {
-      const entry = document.createElement('div');
-      entry.className = `log-entry ${type}`;
-      const time = new Date().toLocaleTimeString();
-      entry.textContent = `[${time}] ${message}`;
-      logOutput.appendChild(entry);
-      logOutput.scrollTop = logOutput.scrollHeight; // Auto-scroll to bottom
-      
-      if (type === 'error') console.error(message);
-      else console.log(message);
-    }
-
-    function clearCurrentStream() {
-      if (currentStream) {
-        currentStream.getTracks().forEach(track => track.stop());
-        videoFeed.srcObject = null;
-        currentStream = null;
-        log('Previous stream tracks stopped and cleared.', 'info');
-      }
-    }
-
-    // --- Usermedia Element Setup ---
-
-    function setupUsermedia(elementId, constraints, testName) {
-      const umElement = document.getElementById(elementId);
-
-      // Feature detection
-      if (typeof umElement.setConstraints !== 'function') {
-        log(`setupUsermedia failed: <usermedia> or setConstraints not supported.`, 'error');
-        return;
-      }
-
-      // Apply constraints
-      umElement.setConstraints(constraints);
-      log(`Constraints set for ${testName}: ${JSON.stringify(constraints)}`, 'info');
-
-      // Add onstream event handler
-      umElement.onstream = function() {
-        if (this.error) {
-          log(`${testName} Failed: ${this.error.name} - ${this.error.message}`, 'error');
-        } else if (this.stream) {
-          clearCurrentStream();
-          currentStream = this.stream;
-          videoFeed.srcObject = currentStream;
-          
-          // Verify tracks
-          const vTracks = currentStream.getVideoTracks().length;
-          const aTracks = currentStream.getAudioTracks().length;
-          log(`${testName} Success! Stream acquired (Video tracks: ${vTracks}, Audio tracks: ${aTracks})`, 'success');
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=0.6" />
+    <title>permission.site (media capture elements)</title>
+    <link rel="shortcut icon" href="favicon.ico" />
+    <link rel="apple-touch-icon" href="app-icon.png" />
+    <link rel="stylesheet" href="style.css" />
+    <script>
+      (function() {
+        const OT_TOKEN =
+          "AoT9sxHnrXGn+/dX2yEn71K0yoQ4jjs/lE3cFwYpt0qpFC/ZCCTN1dw0Cf1w0SN4HcBqJaTiwZy+A19IouqxQwAAAABveyJvcmlnaW4iOiJodHRwczovL3R1bmduaDI4LmdpdGh1Yi5pbzo0NDMiLCJmZWF0dXJlIjoiVXNlck1lZGlhRWxlbWVudCIsImV4cGlyeSI6MTc4Mzk4NzIwMCwiaXNTdWJkb21haW4iOnRydWV9";
+        const isLegacy = sessionStorage.getItem("legacyModeActive") === "true";
+        if (isLegacy) {
+          const meta = document.createElement("meta");
+          meta.setAttribute("http-equiv", "origin-trial");
+          meta.setAttribute("content", OT_TOKEN);
+          document.head.appendChild(meta);
         }
-      };
-    }
+      })();
+    </script>
+  </head>
+  <body>
+    <div class="before"></div>
+    <div class="content">
+      <h1>Media Capture Elements Demo</h1>
 
-    // --- Initialization ---
+      <div id="mode-toggle-wrapper" class="mode-toggle-box">
+        <p>
+          <strong>Current Mode:</strong>
+          <span id="mode-indicator" style="font-weight: 800;">STANDARD</span>
+        </p>
+        <button id="toggle-ot-btn">Enable Legacy Mode (OT)</button>
+      </div>
+      
+      <h2>1. Media Capture Elements</h2>
+      <p>Click these elements to request media with different constraints (no <code>type</code> attribute).</p>
+      <div>
+        <span class="permission-element-box">
+          <usermedia id="um-both" tabindex="0">No Usermedia Element</usermedia>
+        </span>
+        <span class="permission-element-box">
+          <camera id="cam-element" tabindex="0">No Camera Element</camera>
+        </span>
+        <span class="permission-element-box">
+          <microphone id="mic-element" tabindex="0">No Microphone Element</microphone>
+        </span>
+      </div>
 
-    window.addEventListener('DOMContentLoaded', () => {
-      // Check for global capability
-      if (typeof window.HTMLUserMediaElement !== 'undefined') {
-        log('HTMLUserMediaElement is supported in this browser environment.', 'success');
+      <h2>2. Legacy &lt;usermedia&gt; Element</h2>
+      <p>Click these elements to request media using the legacy <code>type</code> attribute (acting like permission elements).</p>
+      <div>
+        <span class="permission-element-box">
+          <usermedia id="um-legacy-audio" type="microphone" tabindex="0">No Usermedia Element</usermedia>
+        </span>
+        <span class="permission-element-box">
+          <usermedia id="um-legacy-video" type="camera" tabindex="0">No Usermedia Element</usermedia>
+        </span>
+        <span class="permission-element-box">
+          <usermedia id="um-legacy-both" type="camera microphone" tabindex="0">No Usermedia Element</usermedia>
+        </span>
+      </div>
+
+      <div class="media-display-container">
+        <h3>Live Preview</h3>
+        <video id="video-feed" class="media-video-feed" autoplay muted playsinline></video>
         
-        // Initialize the three test cases
-        setupUsermedia('btn-audio', { audio: true, video: false }, 'Audio Only');
-        setupUsermedia('btn-video', { audio: false, video: true }, 'Video Only');
-        setupUsermedia('btn-both', { audio: true, video: true }, 'Audio & Video');
-      } else {
-        log('HTMLUserMediaElement is NOT supported. Check your flags or Origin Trial token.', 'error');
-      }
-    });
-  </script>
+        <div id="volume-meter-container" class="volume-meter-container">
+          <span>Microphone Input Level:</span>
+          <div class="volume-meter-bg">
+            <div id="volume-meter-bar" class="volume-meter-bar"></div>
+          </div>
+        </div>
 
-</body>
+        <h3>Event Logs</h3>
+        <div id="log-output" class="media-event-logger">Waiting for user interaction...</div>
+      </div>
+      
+      <div class="demo-instructions">
+        <h2>👩🏻‍💻 Demo Instructions</h2>
+        <p>By default, standard media capture elements are enabled starting in Chrome M151.</p>
+        <p>To test the <strong>legacy usermedia mode</strong> (with the <code>type</code> attribute), you need to enable the legacy support experiment:</p>
+        <ul>
+          <li>Go to <code>chrome://flags</code> and enable the <strong>UserMediaElementLegacy</strong> flag.</li>
+          <li>Alternatively, shut down the browser process and restart it with the command line flag:
+            <pre>--enable-features=UserMediaElementLegacy</pre>
+          </li>
+          <li>Or register for the <strong>UserMediaElement</strong> Origin Trial (OT) to enable legacy support on your origin.</li>
+          <li>
+            Ensure the flag took effect by verifying it appears on:
+            <pre>chrome://version</pre>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="after"></div>
+
+    <div class="github-fork-ribbon-wrapper right">
+      <div class="github-fork-ribbon">
+        <a href="https://github.com/chromium/permission.site">On GitHub</a>
+      </div>
+    </div>
+
+    <script src="./media_capture_element.js"></script>
+  </body>
 </html>

@@ -1,9 +1,22 @@
+:root {
+  color-scheme: light dark;
+  --main-background-color: #eee;
+  --button-background-color: #fff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --main-background-color: #222;
+    --button-background-color: #555;
+  }
+}
+
 /* Light material design boilerplate. */
 html, body {
   width: 100%;
   margin: 0;
   padding: 0;
-  background: #EEEEEE;
+  background: var(--main-background-color);
 }
 
 /* Only apply min-height to non-print media */
@@ -179,4 +192,131 @@ a#toggle:hover {
 {
   color: rgb(219, 68, 55);
   font-size: 2em;
+}
+
+.permission-element-box {
+  display: inline-block;
+}
+
+usermedia,
+camera,
+microphone {
+  display: inline-block;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: var(--button-background-color, #fff);
+  color: currentColor;
+  cursor: pointer;
+  user-select: none;
+  font-weight: bold;
+  margin: 10px;
+  transition: background-color 0.2s;
+}
+
+usermedia:hover,
+camera:hover,
+microphone:hover {
+  background-color: color-mix(
+    in oklab,
+    currentColor 10%,
+    var(--button-background-color, #fff)
+  );
+}
+
+.media-display-container {
+  margin: 20px auto;
+  max-width: 640px;
+}
+
+.media-video-feed {
+  width: 100%;
+  height: 360px;
+  background-color: #000;
+  border: 2px solid #ccc;
+  border-radius: 5px;
+}
+
+.media-event-logger {
+  font-family: monospace;
+  border: 1px solid #ddd;
+  padding: 15px;
+  margin-top: 10px;
+  background-color: var(--button-background-color, #fff);
+  min-height: 120px;
+  max-height: 250px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  text-align: left;
+}
+
+.media-event-logger .log-entry {
+  margin: 4px 0;
+}
+
+.media-event-logger .success {
+  color: #1ac222;
+}
+
+.media-event-logger .error {
+  color: #db4437;
+}
+
+.media-event-logger .info {
+  color: #2192ef;
+}
+
+.volume-meter-container {
+  display: none;
+  margin: 15px auto;
+  max-width: 640px;
+  text-align: left;
+}
+
+.volume-meter-bg {
+  width: 100%;
+  height: 20px;
+  background-color: var(--main-background-color, #eee);
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 5px;
+}
+
+.volume-meter-bar {
+  width: 0%;
+  height: 100%;
+  background-color: #1ac222;
+  transition: width 0.05s ease;
+}
+
+.mode-toggle-box {
+  margin: 1.5em auto 2.5em;
+  padding: 1em;
+  border: 1px dashed #aaa;
+  max-width: 640px;
+  border-radius: 5px;
+  background-color: var(--button-background-color, #fff);
+  text-align: center;
+}
+
+.mode-toggle-box p {
+  margin: 0 0 1em;
+  font-size: 1.1em;
+}
+
+.mode-toggle-box button {
+  width: auto;
+  font-size: 1em;
+  padding: 6px 12px;
+  margin: 0;
+}
+
+.demo-instructions {
+  padding: 0.5rem 1rem;
+  text-align: left;
+  border: solid 1px;
+  max-width: 80rem;
+  align-self: center;
+  margin: 1rem auto;
 }
