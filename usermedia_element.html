@@ -10,7 +10,7 @@
     <script>
       (function() {
         const OT_TOKEN =
-          "AoT9sxHnrXGn+/dX2yEn71K0yoQ4jjs/lE3cFwYpt0qpFC/ZCCTN1dw0Cf1w0SN4HcBqJaTiwZy+A19IouqxQwAAAABveyJvcmlnaW4iOiJodHRwczovL3R1bmduaDI4LmdpdGh1Yi5pbzo0NDMiLCJmZWF0dXJlIjoiVXNlck1lZGlhRWxlbWVudCIsImV4cGlyeSI6MTc4Mzk4NzIwMCwiaXNTdWJkb21haW4iOnRydWV9";
+          "AoT9sxHnrXGn+/dX2yEn71K0yoQ4jjs/lE3cFwYpt0qpFC/ZCCTN1dw0Cf1w0SN4HcBqJaTiwZy+A19IouqxQwAAAABveyJvcmlnaW4iOiJodHRwczovL3R1bmduaDI4LmdpdGh1Yi5pbzo0NDMiLCJmZWF0dXJlIjoiVXNlck1lZGlhRWxlbWVudCIsImV4cGlyZSI6MTQ3OTExNDgxNiwiaXNTdWJkb21haW4iOnRydWV9";
         const isLegacy = sessionStorage.getItem("legacyModeActive") === "true";
         if (isLegacy) {
           const meta = document.createElement("meta");
@@ -48,7 +48,21 @@
         </span>
       </div>
 
-      <h2>2. Legacy &lt;usermedia&gt; Element</h2>
+      <h2>2. Media Capture Elements in Icon-Only Mode</h2>
+      <p>Click these elements to request media rendered in icon-only mode (<code>displaymode="icon-only"</code>).</p>
+      <div>
+        <span class="permission-element-box">
+          <usermedia id="um-both-icon-only" displaymode="icon-only" tabindex="0">No Usermedia Element</usermedia>
+        </span>
+        <span class="permission-element-box">
+          <camera id="cam-icon-only" displaymode="icon-only" tabindex="0">No Camera Element</camera>
+        </span>
+        <span class="permission-element-box">
+          <microphone id="mic-icon-only" displaymode="icon-only" tabindex="0">No Microphone Element</microphone>
+        </span>
+      </div>
+
+      <h2>3. Legacy &lt;usermedia&gt; Element</h2>
       <p>Click these elements to request media using the legacy <code>type</code> attribute (acting like permission elements).</p>
       <div>
         <span class="permission-element-box">
@@ -62,9 +76,9 @@
         </span>
       </div>
 
-      <h2>3. Progressive Enhancement &amp; Fallback Pattern</h2>
+      <h2>4. Progressive Enhancement &amp; Fallback Pattern</h2>
       <p>
-        In browsers that do not support capability elements, tags like <code>&lt;usermedia&gt;</code> are treated as unknown HTML elements and render their child elements. Clean non-inline JavaScript listeners handle both modern element events and legacy <code>getUserMedia()</code> fallback clicks.
+        In browsers that do not support capability elements, tags like <code>&lt;usermedia&gt;</code> are treated as unknown HTML elements and render their child elements. Clean non-inline JavaScript is used to progressively enhance them when supported.
       </p>
       <div>
         <span class="permission-element-box">
